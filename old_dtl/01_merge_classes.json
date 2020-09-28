@@ -1,0 +1,22 @@
+[
+  {
+    "dst": "$sample",
+    "src": [
+      "Cars/*"
+    ],
+    "action": "data",
+    "settings": {
+      "classes_mapping": {
+        "__other__": "obj"
+      }
+    }
+  },
+  {
+    "dst": "Car_Parts_DTL_1",
+    "src": [
+      "$sample"
+    ],
+    "action": "supervisely",
+    "settings": {}
+  }
+]

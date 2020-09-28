@@ -5,8 +5,6 @@ import supervisely_lib as sly
 
 my_app = sly.AppService()
 
-LENGTH = int(os.environ['modal.state.length'])
-
 
 @my_app.callback("generate")
 @sly.timeit

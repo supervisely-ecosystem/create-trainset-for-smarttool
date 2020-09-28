@@ -1,0 +1,58 @@
+[
+  {
+    "dst": "$data01",
+    "src": [
+      "Car_Parts_DTL_2/*"
+    ],
+    "action": "data",
+    "settings": {
+      "classes_mapping": "default"
+    }
+  },
+  {
+    "dst": [
+      "$totrain",
+      "$toval"
+    ],
+    "src": [
+      "$data01"
+    ],
+    "action": "if",
+    "settings": {
+      "condition": {
+        "probability": 0.95
+      }
+    }
+  },
+  {
+    "dst": "$train",
+    "src": [
+      "$totrain"
+    ],
+    "action": "tag",
+    "settings": {
+      "tag": "train",
+      "action": "add"
+    }
+  },
+  {
+    "dst": "$val",
+    "src": [
+      "$toval"
+    ],
+    "action": "tag",
+    "settings": {
+      "tag": "val",
+      "action": "add"
+    }
+  },
+  {
+    "dst": "Car_Parts_DTL_3-train-val",
+    "src": [
+      "$train",
+      "$val"
+    ],
+    "action": "supervisely",
+    "settings": {}
+  }
+]

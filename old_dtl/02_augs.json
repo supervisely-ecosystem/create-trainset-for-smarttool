@@ -1,0 +1,130 @@
+[
+  {
+    "dst": "$1",
+    "src": [
+      "Car_Parts_DTL_1/*"
+    ],
+    "action": "data",
+    "settings": {
+      "classes_mapping": "default"
+    }
+  },
+  {
+    "dst": "$2",
+    "src": [
+      "$1"
+    ],
+    "action": "objects_filter",
+    "settings": {
+      "filter_by": {
+        "polygon_sizes": {
+          "action": "delete",
+          "area_size": {
+            "percent": 0.05
+          },
+          "comparator": "less",
+          "filtering_classes": [
+            "obj"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "dst": "$222",
+    "src": [
+      "$2"
+    ],
+    "action": "flip",
+    "settings": {
+      "axis": "vertical"
+    }
+  },
+  {
+    "dst": "$3",
+    "src": [
+      "$2",
+      "$222"
+    ],
+    "action": "instances_crop",
+    "settings": {
+      "pad": {
+        "sides": {
+          "top": "10%",
+          "left": "10%",
+          "right": "10%",
+          "bottom": "10%"
+        }
+      },
+      "classes": [
+        "obj"
+      ]
+    }
+  },
+  {
+    "dst": "$2222",
+    "src": [
+      "$2"
+    ],
+    "action": "flip",
+    "settings": {
+      "axis": "vertical"
+    }
+  },
+  {
+    "dst": "$3",
+    "src": [
+      "$2",
+      "$2222"
+    ],
+    "action": "instances_crop",
+    "settings": {
+      "pad": {
+        "sides": {
+          "top": "5%",
+          "left": "5%",
+          "right": "5%",
+          "bottom": "5%"
+        }
+      },
+      "classes": [
+        "obj"
+      ]
+    }
+  },
+  {
+    "dst": "$4",
+    "src": [
+      "$3"
+    ],
+    "action": "resize",
+    "settings": {
+      "width": 256,
+      "height": 256,
+      "aspect_ratio": {
+        "keep": false
+      }
+    }
+  },
+  {
+    "dst": "$5",
+    "src": [
+      "$4"
+    ],
+    "action": "generate_hints",
+    "settings": {
+      "class": "obj",
+      "negative_class": "neg",
+      "positive_class": "pos",
+      "min_points_number": 0
+    }
+  },
+  {
+    "dst": "Car_Parts_DTL_2",
+    "src": [
+      "$5"
+    ],
+    "action": "supervisely",
+    "settings": {}
+  }
+]
