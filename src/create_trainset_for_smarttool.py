@@ -5,25 +5,32 @@ import supervisely_lib as sly
 
 my_app = sly.AppService()
 
+TEAM_ID = int(os.environ['context.teamId'])
+WORKSPACE_ID = int(os.environ['context.workspaceId'])
+PROJECT_ID = int(os.environ['modal.state.slyProjectId'])
 
-@my_app.callback("generate")
+
+@my_app.callback("apply_to_random_image")
 @sly.timeit
-def generate_random_string(api: sly.Api, task_id, context, state, app_logger):
-    rand_string = ''.join((random.choice(string.ascii_letters + string.digits)) for _ in range(LENGTH))
-    rand_string = state["prefix"] + rand_string
-    api.task.set_field(task_id, "data.randomString", rand_string)
+def apply_to_random_image(api: sly.Api, task_id, context, state, app_logger):
+    pass
 
 
-@my_app.callback("preprocessing")
-@sly.timeit
-def preprocessing(api: sly.Api, task_id, context, state, app_logger):
-    sly.logger.info("do something here")
+def do(project_meta, img, ann):
+    pass
 
 
 def main():
-    sly.logger.info("Script arguments from modal dialog box",  extra={"length: ": LENGTH})
-
     api = sly.Api.from_env()
+    image_id = 313996
+
+    project = api.project.get_info_by_id(PROJECT_ID)
+    image_info = api.image.get_info_by_id(image_id)
+    
+
+    x = 10
+    return
+
 
     data = {
         "randomString": "hello!"
