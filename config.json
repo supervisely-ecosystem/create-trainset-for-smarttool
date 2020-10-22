@@ -1,11 +1,12 @@
 {
-  "name": "Create trainset for SmartTool",
+  "name": "Create Trainset for SmartTool",
   "type": "app",
   "categories": [
-    "smarttool"
+    "SmartTool",
+    "Training Data"
   ],
   "description": "Prepare training data for SmartTool",
-  "docker_image": "docker.deepsystems.io/supervisely/five/base-py-sdk-internal:apps",
+  "docker_image": "supervisely/base-py-sdk:6",
   "main_script": "src/create_trainset_for_smarttool.py",
   "modal_template": "src/modal.html",
   "gui_template": "src/gui.html",
@@ -15,6 +16,6 @@
   "icon_background": "#FFFFFF",
   "context_menu": {
     "target": ["images_project"],
-    "context_root": "Training data"
+    "context_root": "Training Data"
   }
 }

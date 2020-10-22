@@ -3,6 +3,8 @@ import random
 import string
 import supervisely_lib as sly
 
+# https://git.deepsystems.io/deepsystems/supervisely_py/-/merge_requests/1/diffs
+
 my_app = sly.AppService()
 
 TEAM_ID = int(os.environ['context.teamId'])
@@ -22,15 +24,6 @@ def do(project_meta, img, ann):
 
 def main():
     api = sly.Api.from_env()
-    image_id = 313996
-
-    project = api.project.get_info_by_id(PROJECT_ID)
-    image_info = api.image.get_info_by_id(image_id)
-    
-
-    x = 10
-    return
-
 
     data = {
         "randomString": "hello!"
@@ -45,17 +38,11 @@ def main():
             "state": None,
             "context": None,
             "command": "preprocessing",
-        }#,
-        # {
-        #     "state": None,
-        #     "context": None,
-        #     "command": "stop",
-        # }
+        }
     ]
 
     # Run application service
     my_app.run(data=data, state=state, initial_events=initial_events)
-    my_app.wait_all()
 
 
 if __name__ == "__main__":
