@@ -13,7 +13,9 @@ PROJECT_ID = int(os.environ['modal.state.slyProjectId'])
 
 project = None
 total_images_count = None
-
+image_ids = []
+project_meta = None
+new_project_meta = None
 
 @my_app.callback("create_trainset")
 def do(api: sly.Api, task_id, context, state, app_logger):
@@ -34,20 +36,35 @@ def _count_train_val_split(train_percent, total_images_count):
 
 @my_app.callback("count_train_val_split")
 @sly.timeit
-def do(api: sly.Api, task_id, context, state, app_logger):
+def count_split(api: sly.Api, task_id, context, state, app_logger):
     split_table = _count_train_val_split(state["trainPercent"], total_images_count)
     api.task.set_fields(task_id, [{"field": "data.splitTable", "payload": split_table}])
 
 
+@my_app.callback("preview")
+@sly.timeit
+def preview(api: sly.Api, task_id, context, state, app_logger):
+    image_id = random.choice(image_ids)
+    ann_json = api.annotation.download(image_id).annotation
+    ann = sly.Annotation.from_json(ann_json, project_meta)
+
+
 def main():
     api = sly.Api.from_env()
-    global project, total_images_count
+    global project, total_images_count, image_ids, project_meta, new_project_meta
 
     project = api.project.get_info_by_id(PROJECT_ID)
+    project_meta = sly.ProjectMeta.from_json(api.project.get_meta(project.id))
+
     train_percent = 95
     total_images_count = api.project.get_images_count(project.id)
     split_table = _count_train_val_split(train_percent, total_images_count)
 
+    for dataset in api.dataset.get_list(project.id):
+        image_infos = api.image.get_list(dataset.id)
+        image_ids.extend([info.id for info in image_infos])
+
+    my_app.logger.info("Image ids are initialized", extra={"count": len(image_ids)})
 
     data = {
         "projectId": project.id,
@@ -72,11 +89,11 @@ def main():
     }
 
     initial_events = [
-        # {
-        #     "state": None,
-        #     "context": None,
-        #     "command": "apply_to_random_image",
-        # }
+        {
+            "state": None,
+            "context": None,
+            "command": "preview",
+        }
     ]
 
     # Run application service

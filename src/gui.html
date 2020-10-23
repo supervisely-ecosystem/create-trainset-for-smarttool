@@ -39,8 +39,8 @@
                                         Padding is measured in percent of corresponding side
                                         (width of height of bounding box)">
                     <div class="fflex">
-                        <el-slider v-model="state.paddingRange" range :min="2" :max="20" style="width: 70%"></el-slider>
-                        <div style="margin-left: 4px">[{{state.paddingRange[0]}}%, {{state.paddingRange[1]}}%]</div>
+                        <el-slider v-model="state.paddingRange" range :min="2" :max="20" style="width: 100%"></el-slider>
+                        <div style="margin-left: 20px; flex: none">[{{state.paddingRange[0]}}%, {{state.paddingRange[1]}}%]</div>
                     </div>
                 </sly-field>
                 <sly-field title="Min points count (hints)" description="Min number of positive and negative points">
@@ -75,17 +75,15 @@
                     <el-input size="small" v-model="state.className"> </el-input>
                 </sly-field>
                 <sly-field title="Point class name " description="Define class name for positive/negative points">
-                    <div class="fflex" style="flex-direction: column; align-items: flex-start;">
-                        <div class="fflex">
-                            <b style="flex: none; display: inline-block; border-radius: 50%; background: limegreen; width: 8px; height: 8px; margin-right: 3px"></b>
-                            <div style="margin-right: 3px; width: 60px; flex: none;">Positive:</div>
-                            <el-input size="small" style="flex: none;" v-model="state.posClassName"> </el-input>
-                        </div>
-                        <div class="fflex" style="margin-top: 10px">
-                            <b style="flex: none; display: inline-block; border-radius: 50%; background: red; width: 8px; height: 8px; margin-right: 3px"></b>
-                            <div style="margin-right: 3px; width: 60px; flex: none;">Negative:</div>
-                            <el-input size="small" style="flex: none;" v-model="state.negClassName"> </el-input>
-                        </div>
+                    <div class="fflex">
+                        <b style="flex: none; display: inline-block; border-radius: 50%; background: limegreen; width: 8px; height: 8px; margin-right: 3px"></b>
+                        <div style="margin-right: 3px; width: 60px; flex: none;">Positive:</div>
+                        <el-input size="small" v-model="state.posClassName"> </el-input>
+                    </div>
+                    <div class="fflex" style="margin-top: 10px">
+                        <b style="flex: none; display: inline-block; border-radius: 50%; background: red; width: 8px; height: 8px; margin-right: 3px"></b>
+                        <div style="margin-right: 3px; width: 60px; flex: none;">Negative:</div>
+                        <el-input size="small" v-model="state.negClassName"> </el-input>
                     </div>
                 </sly-field>
         </sly-card>
