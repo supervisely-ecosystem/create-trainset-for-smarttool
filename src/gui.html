@@ -27,9 +27,20 @@
 
     <el-row :gutter="10" type="flex">
         <el-col :span="8">
-            <sly-card title="Settings" subtitle="Augmentation settings" style="margin-top: 10px">
+            <sly-card title="Settings" subtitle="Augmentation settings, you can keep default values"
+                      style="margin-top: 10px">
+                <sly-field title="Train / Val split" description="Choose the percent of images for training">
+                    <el-slider v-model="state.trainPercent" :min="70" :max="100" show-input></el-slider>
+<!--                    <el-table :data="data.splitTable" style="width: 100%">-->
+<!--                        <el-table-column prop="name" label="Name"></el-table-column>-->
+<!--                        <el-table-column prop="count" label="Count"></el-table-column>-->
+<!--                    </el-table>-->
+                    <div>Total: {{data.totalImagesCount}}</div>
+                    <div>Train: {{data.trainImagesCount}}</div>
+                    <div>Val: {{data.valImagesCount}}</div>
+                </sly-field>
                 <sly-field title="Area filter" description="Filter objects with area less than defined">
-                    <el-slider v-model="state.filterPercent" :min="0" :max="100" show-input> </el-slider>
+                    <el-slider v-model="state.filterPercent" :min="0" :max="100" show-input></el-slider>
                 </sly-field>
                 <sly-field title="Objects crop"
                            description="Padding is randomly sampled from defined range.
@@ -40,7 +51,9 @@
                         <div style="margin-left: 4px">{{state.paddingRange}}</div>
                     </div>
                 </sly-field>
-                <div>sdadakjdhkasjlkjashldfhasklhfdlkasjhfkashkfd</div>
+                <sly-field title="Min points count (hints)" description="Min number of positive and negative points">
+                    <el-input-number v-model="state.minPointsCount" size="small" :min="0" :max="20"></el-input-number>
+                </sly-field>
             </sly-card>
         </el-col>
     </el-row>
