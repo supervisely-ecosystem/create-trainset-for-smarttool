@@ -27,19 +27,34 @@
 
     <el-row :gutter="10" type="flex">
         <el-col :span="8">
-            <sly-card title="Settings" subtitle="Augmentation settings, you can keep default values"
-                      style="margin-top: 10px">
+            <sly-card title="Settings" subtitle="basic settings" style="margin-top: 10px">
                 <sly-field title="Train / Val split" description="Choose the percent of images for training">
-                    <el-slider v-model="state.trainPercent" :min="70" :max="100" show-input></el-slider>
-<!--                    <el-table :data="data.splitTable" style="width: 100%">-->
-<!--                        <el-table-column prop="name" label="Name"></el-table-column>-->
-<!--                        <el-table-column prop="count" label="Count"></el-table-column>-->
-<!--                    </el-table>-->
-                    <div>Total: {{data.totalImagesCount}}</div>
-                    <div>Train: {{data.trainImagesCount}}</div>
-                    <div>Val: {{data.valImagesCount}}</div>
+                    <el-slider v-model="state.trainPercent" :min="20" :max="100" show-input></el-slider>
+                    <el-button type="text" @click="command('count_train_val_split')">
+                        <i class="zmdi zmdi-refresh"></i> Refresh
+                    </el-button>
+                    <el-table :data="data.splitTable" :show-header="false">
+                        <el-table-column prop="name" label="Name"></el-table-column>
+                        <el-table-column prop="count" label="Count"></el-table-column>
+                    </el-table>
                 </sly-field>
-                <sly-field title="Area filter" description="Filter objects with area less than defined">
+
+                <div style="border-bottom: 1px solid #e3e6ec; margin: 10px 0"></div>
+                <sly-field title="NN input size" description="Input model resolution (in pixels)">
+                    <div class="fflex">
+                        <div style="margin-right: 3px">W x H :</div>
+                        <el-input-number v-model="state.inputWidth" style="width:60px" :min="64" :max="1024" size="small" :controls="false"></el-input-number>
+                        <div style="margin: 0 3px">x</div>
+                        <el-input-number v-model="state.inputHeight" style="width:60px" :min="64" :max="1024" size="small" :controls="false"></el-input-number>
+                    </div>
+                </sly-field>
+
+            </sly-card>
+            <sly-card title="Augmentations" subtitle="Augmentation settings, you can keep default values"
+                      style="margin-top: 10px">
+                <sly-field title="Objects filter by area"
+                           description="Filter objects with area less than defined.
+                                        Object area is measured in percent of image">
                     <el-slider v-model="state.filterPercent" :min="0" :max="100" show-input></el-slider>
                 </sly-field>
                 <sly-field title="Objects crop"
@@ -48,7 +63,7 @@
                                         (width of height of bounding box)">
                     <div class="fflex">
                         <el-slider v-model="state.paddingRange" range :min="2" :max="20" style="width: 70%"></el-slider>
-                        <div style="margin-left: 4px">{{state.paddingRange}}</div>
+                        <div style="margin-left: 4px">[{{state.paddingRange[0]}}%, {{state.paddingRange[1]}}%]</div>
                     </div>
                 </sly-field>
                 <sly-field title="Min points count (hints)" description="Min number of positive and negative points">
@@ -57,6 +72,7 @@
             </sly-card>
         </el-col>
     </el-row>
+
 
 
 </div>

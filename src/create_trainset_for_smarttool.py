@@ -14,29 +14,30 @@ PROJECT_ID = int(os.environ['modal.state.slyProjectId'])
 project = None
 total_images_count = None
 
-@my_app.callback("apply_to_random_image")
-@sly.timeit
-def apply_to_random_image(api: sly.Api, task_id, context, state, app_logger):
-    pass
 
 @my_app.callback("create_trainset")
 def do(api: sly.Api, task_id, context, state, app_logger):
     print("123")
     pass
 
-@my_app.callback("count_train_val_split")
-def do(api: sly.Api, task_id, context, state, app_logger):
-    train_percent = state["trainPercent"]
-    if total_images_count is None:
-        raise ValueError("Total images count is not defined")
-        return
-    train_images_count = min(1, total_images_count * train_percent / 100)
+
+def _count_train_val_split(train_percent, total_images_count):
+    train_images_count = max(1, int(total_images_count * train_percent / 100))
     val_images_count = total_images_count - train_images_count
-    fields = [
-        {"field": "data.trainImagesCount", "payload": train_images_count},
-        {"field": "data.valImagesCount", "payload": val_images_count},
+    split_table = [
+        {"name": "total", "count": total_images_count},
+        {"name": "train", "count": train_images_count},
+        {"name": "val", "count": val_images_count}
     ]
-    api.task.set_fields(task_id, fields)
+    return split_table
+
+
+@my_app.callback("count_train_val_split")
+@sly.timeit
+def do(api: sly.Api, task_id, context, state, app_logger):
+    split_table = _count_train_val_split(state["trainPercent"], total_images_count)
+    api.task.set_fields(task_id, [{"field": "data.splitTable", "payload": split_table}])
+
 
 def main():
     api = sly.Api.from_env()
@@ -45,13 +46,8 @@ def main():
     project = api.project.get_info_by_id(PROJECT_ID)
     train_percent = 80
     total_images_count = api.project.get_images_count(project.id)
-    train_images_count = min(1, total_images_count * train_percent / 100)
-    val_images_count = total_images_count - train_images_count
-    split_table = [
-        {"name": "total", "count": total_images_count},
-        {"name": "train", "count": train_images_count},
-        {"name": "val", "count": val_images_count}
-    ]
+    split_table = _count_train_val_split(train_percent, total_images_count)
+
 
     data = {
         "projectId": project.id,
@@ -60,8 +56,6 @@ def main():
         "progress": 0,
         "started": False,
         "totalImagesCount": total_images_count,
-        "trainImagesCount": train_images_count,
-        "valImagesCount": val_images_count,
         "splitTable": split_table
     }
 
@@ -69,15 +63,17 @@ def main():
         "trainPercent": train_percent,
         "filterPercent": 5,
         "paddingRange": [5, 10],
-        "minPointsCount": 0
+        "minPointsCount": 0,
+        "inputWidth": 256,
+        "inputHeight": 256
     }
 
     initial_events = [
-        {
-            "state": None,
-            "context": None,
-            "command": "apply_to_random_image",
-        }
+        # {
+        #     "state": None,
+        #     "context": None,
+        #     "command": "apply_to_random_image",
+        # }
     ]
 
     # Run application service
