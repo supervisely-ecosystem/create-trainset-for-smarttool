@@ -21,9 +21,9 @@ def apply_to_random_image(api: sly.Api, task_id, context, state, app_logger):
 def do(project_meta, img, ann):
     pass
 
-
 def main():
     api = sly.Api.from_env()
+    project = api.project.get_info_by_id(PROJECT_ID)
 
     data = {
         "randomString": "hello!"
@@ -37,7 +37,7 @@ def main():
         {
             "state": None,
             "context": None,
-            "command": "preprocessing",
+            "command": "apply_to_random_image",
         }
     ]
 
