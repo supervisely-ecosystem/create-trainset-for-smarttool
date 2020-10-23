@@ -27,8 +27,29 @@
 
     <el-row :gutter="10" type="flex">
         <el-col :span="8">
+            <sly-card title="Augmentation settings" subtitle="You can keep default values"
+                      style="margin-top: 10px">
+                <sly-field title="Objects filter by area"
+                           description="Filter objects with area less than defined.
+                                        Object area is measured in percent of image">
+                    <el-slider v-model="state.filterPercent" :min="0" :max="20" show-input></el-slider>
+                </sly-field>
+                <sly-field title="Objects crop"
+                           description="Padding is randomly sampled from defined range.
+                                        Padding is measured in percent of corresponding side
+                                        (width of height of bounding box)">
+                    <div class="fflex">
+                        <el-slider v-model="state.paddingRange" range :min="2" :max="20" style="width: 70%"></el-slider>
+                        <div style="margin-left: 4px">[{{state.paddingRange[0]}}%, {{state.paddingRange[1]}}%]</div>
+                    </div>
+                </sly-field>
+                <sly-field title="Min points count (hints)" description="Min number of positive and negative points">
+                    <el-input-number v-model="state.minPointsCount" size="small" :min="0" :max="20"></el-input-number>
+                </sly-field>
+            </sly-card>
             <sly-card title="Settings" subtitle="basic settings" style="margin-top: 10px">
-                <sly-field title="Train / Val split" description="Choose the percent of images for training">
+                <sly-field title="Train / Val split"
+                           description="Choose the percent of images for training. As a result, at least one image have to be in train/val dataset">
                     <el-slider v-model="state.trainPercent" :min="20" :max="100" show-input></el-slider>
                     <el-button type="text" @click="command('count_train_val_split')">
                         <i class="zmdi zmdi-refresh"></i> Refresh
@@ -67,28 +88,20 @@
                         </div>
                     </div>
                 </sly-field>
-            </sly-card>
-
-            <sly-card title="Augmentations" subtitle="Augmentation settings, you can keep default values"
+        </sly-card>
+        </el-col>
+        <el-col :span="16" style="flex: 1">
+            <sly-card title="Preview on random image"
+                      subtitle="Preview both original image and augmentation results"
                       style="margin-top: 10px">
-                <sly-field title="Objects filter by area"
-                           description="Filter objects with area less than defined.
-                                        Object area is measured in percent of image">
-                    <el-slider v-model="state.filterPercent" :min="0" :max="100" show-input></el-slider>
-                </sly-field>
-                <sly-field title="Objects crop"
-                           description="Padding is randomly sampled from defined range.
-                                        Padding is measured in percent of corresponding side
-                                        (width of height of bounding box)">
-                    <div class="fflex">
-                        <el-slider v-model="state.paddingRange" range :min="2" :max="20" style="width: 70%"></el-slider>
-                        <div style="margin-left: 4px">[{{state.paddingRange[0]}}%, {{state.paddingRange[1]}}%]</div>
-                    </div>
-                </sly-field>
-                <sly-field title="Min points count (hints)" description="Min number of positive and negative points">
-                    <el-input-number v-model="state.minPointsCount" size="small" :min="0" :max="20"></el-input-number>
-                </sly-field>
+                <div slot="header">
+                    <el-button type="primary" @click="command('preview')">
+                        <i class="zmdi zmdi-play" style="margin-right: 5px"></i> Preview
+                    </el-button>
+                </div>
             </sly-card>
         </el-col>
     </el-row>
+
+
 </div>
