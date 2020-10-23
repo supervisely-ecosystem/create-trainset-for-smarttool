@@ -22,7 +22,7 @@ def do(api: sly.Api, task_id, context, state, app_logger):
 
 
 def _count_train_val_split(train_percent, total_images_count):
-    train_images_count = max(1, int(total_images_count * train_percent / 100))
+    train_images_count = max(1, min(total_images_count - 1, int(total_images_count * train_percent / 100)))
     val_images_count = total_images_count - train_images_count
     split_table = [
         {"name": "total", "count": total_images_count},
@@ -44,7 +44,7 @@ def main():
     global project, total_images_count
 
     project = api.project.get_info_by_id(PROJECT_ID)
-    train_percent = 80
+    train_percent = 95
     total_images_count = api.project.get_images_count(project.id)
     split_table = _count_train_val_split(train_percent, total_images_count)
 
@@ -65,7 +65,10 @@ def main():
         "paddingRange": [5, 10],
         "minPointsCount": 0,
         "inputWidth": 256,
-        "inputHeight": 256
+        "inputHeight": 256,
+        "className": "obj",
+        "posClassName": "pos",
+        "negClassName": "neg"
     }
 
     initial_events = [
