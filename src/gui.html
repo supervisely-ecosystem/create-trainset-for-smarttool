@@ -1,5 +1,5 @@
 <div>
-    <el-row :gutter="20" type="flex">
+    <el-row :gutter="10" type="flex">
         <el-col :span="8">
             <sly-card title="Input">
                 <sly-field title="" description="Project">
@@ -11,21 +11,39 @@
         </el-col>
         <el-col :span="16" style="flex: 1">
             <sly-card title="Output" style="height: 100%">
-                <sly-field v-if="data.progress === 100" title="" description="New project has been successfully created">
+                <sly-field v-if="data.progress === 100" title=""
+                           description="New project has been successfully created">
                     <a slot="title" target="_blank" :href="`/projects/${data.resultProjectId}/datasets`">{{data.resultProject}}</a>
                     <sly-icon slot="icon" :options="{ imageUrl: `${data.resultProjectPreviewUrl}` }"/>
                 </sly-field>
-                <el-progress v-if="data.started === true && data.progress !== 100" :percentage="data.progress"></el-progress>
-                <el-button type="primary" @click="command('convert')" v-if="data.started === false">
+                <el-progress v-if="data.started === true && data.progress !== 100"
+                             :percentage="data.progress"></el-progress>
+                <el-button type="primary" @click="command('create_trainset')" v-if="data.started === false">
                     <i class="zmdi zmdi-play" style="margin-right: 5px"></i> Run
                 </el-button>
             </sly-card>
         </el-col>
     </el-row>
 
+    <el-row :gutter="10" type="flex">
+        <el-col :span="8">
+            <sly-card title="Settings" subtitle="Augmentation settings" style="margin-top: 10px">
+                <sly-field title="Area filter" description="Filter objects with area less than defined">
+                    <el-slider v-model="state.filterPercent" :min="0" :max="100" show-input> </el-slider>
+                </sly-field>
+                <sly-field title="Objects crop"
+                           description="Padding is randomly sampled from defined range.
+                                        Padding is measured in percent of corresponding side
+                                        (width of height of bounding box)">
+                    <div class="fflex">
+                        <el-slider v-model="state.paddingRange" range :min="2" :max="20" style="width: 70%"></el-slider>
+                        <div style="margin-left: 4px">{{state.paddingRange}}</div>
+                    </div>
+                </sly-field>
+                <div>sdadakjdhkasjlkjashldfhasklhfdlkasjhfkashkfd</div>
+            </sly-card>
+        </el-col>
+    </el-row>
 
-    <sly-card title="Shapes transformation"
-              subtitle="Define destination shapes for one or several classes"
-              style="margin-top: 10px">
-    </sly-card>
+
 </div>

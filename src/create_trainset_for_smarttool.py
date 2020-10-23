@@ -17,8 +17,9 @@ PROJECT_ID = int(os.environ['modal.state.slyProjectId'])
 def apply_to_random_image(api: sly.Api, task_id, context, state, app_logger):
     pass
 
-
-def do(project_meta, img, ann):
+@my_app.callback("create_trainset")
+def do(api: sly.Api, task_id, context, state, app_logger):
+    print("123")
     pass
 
 def main():
@@ -26,11 +27,16 @@ def main():
     project = api.project.get_info_by_id(PROJECT_ID)
 
     data = {
-        "randomString": "hello!"
+        "projectId": project.id,
+        "projectName": project.name,
+        "projectPreviewUrl": api.image.preview_url(project.reference_image_url, 100, 100),
+        "progress": 0,
+        "started": False
     }
 
     state = {
-        "prefix": "abc_"
+        "filterPercent": 5,
+        "paddingRange": [5, 10]
     }
 
     initial_events = [
