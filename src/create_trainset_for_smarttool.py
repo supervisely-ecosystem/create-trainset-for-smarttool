@@ -14,7 +14,7 @@ PROJECT_ID = int(os.environ['modal.state.slyProjectId'])
 project = None
 total_images_count = None
 image_ids = []
-project_meta = None
+project_meta: sly.ProjectMeta = None
 new_project_meta = None
 
 @my_app.callback("create_trainset")
@@ -40,14 +40,39 @@ def count_split(api: sly.Api, task_id, context, state, app_logger):
     split_table = _count_train_val_split(state["trainPercent"], total_images_count)
     api.task.set_fields(task_id, [{"field": "data.splitTable", "payload": split_table}])
 
-
 @my_app.callback("preview")
 @sly.timeit
 def preview(api: sly.Api, task_id, context, state, app_logger):
     image_id = random.choice(image_ids)
+    image = api.image.get_info_by_id(image_id)
+
+    img_url = image.full_storage_url
+
     ann_json = api.annotation.download(image_id).annotation
     ann = sly.Annotation.from_json(ann_json, project_meta)
 
+    for label in ann.labels:
+        x = label.to_json()
+
+    content = {
+        "projectMeta": project_meta.to_json(),
+        "annotations": [
+            {"url": image.full_storage_url, "figures": [label.to_json() for label in ann.labels]},
+            {"url": image.full_storage_url, "figures": []},
+            {"url": image.full_storage_url, "figures": []},
+            {"url": image.full_storage_url, "figures": []},
+            {"url": image.full_storage_url, "figures": []},
+        ],
+    }
+
+    options = {
+        "rows": 3,
+        "columns": 3,
+        "opacity": 0.8,
+        "fillRectangle": False
+    }
+
+    api.task.set_fields(task_id, [{"field": "data.preview", "payload": {"content": content, "options": options}}])
 
 def main():
     api = sly.Api.from_env()
@@ -73,7 +98,8 @@ def main():
         "progress": 0,
         "started": False,
         "totalImagesCount": total_images_count,
-        "splitTable": split_table
+        "splitTable": split_table,
+        "preview": {}
     }
 
     state = {
