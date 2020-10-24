@@ -131,6 +131,8 @@ def main():
 
     # Run application service
     # filter percent - reimplement - filter by min side
+    # filter - заменить слайдер на input number
+    # report histogram of objects width/height/area-px/area-percent
     my_app.run(data=data, state=state, initial_events=initial_events)
 
 #@TODO: found image without labels, try again
