@@ -3,7 +3,7 @@ import random
 import string
 import supervisely_lib as sly
 
-from aug_utils import validate_input_meta
+from aug_utils import validate_input_meta, aug_project_meta
 
 # https://git.deepsystems.io/deepsystems/supervisely_py/-/merge_requests/1/diffs
 
@@ -62,8 +62,11 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     ann_json = api.annotation.download(image_id).annotation
     ann = sly.Annotation.from_json(ann_json, project_meta)
 
-    for label in ann.labels:
-        x = label.to_json()
+    obj_class_name = state["className"]
+    pos_class_name = state["posClassName"]
+    neg_class_name = state["negClassName"]
+    res_meta, obj_class, pos_class, neg_class, train_tag, val_tag = \
+        aug_project_meta(project_meta, obj_class_name, pos_class_name, neg_class_name)
 
     content = {
         "projectMeta": project_meta.to_json(),
