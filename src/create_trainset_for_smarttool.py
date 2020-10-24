@@ -27,9 +27,9 @@ def _count_train_val_split(train_percent, total_images_count):
     train_images_count = max(1, min(total_images_count - 1, int(total_images_count * train_percent / 100)))
     val_images_count = total_images_count - train_images_count
     split_table = [
-        {"name": "total", "count": total_images_count},
-        {"name": "train", "count": train_images_count},
-        {"name": "val", "count": val_images_count}
+        {"name": "total images", "count": total_images_count},
+        {"name": "train images", "count": train_images_count},
+        {"name": "val images", "count": val_images_count}
     ]
     return split_table
 
