@@ -1,1 +1,3 @@
 # Create Trainset for SmartTool
+
+- convert shape or rasterize (1. rasterize, 2. remove classes)...

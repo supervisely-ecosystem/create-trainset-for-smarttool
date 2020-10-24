@@ -3,6 +3,8 @@ import random
 import string
 import supervisely_lib as sly
 
+from aug_utils import validate_input_meta
+
 # https://git.deepsystems.io/deepsystems/supervisely_py/-/merge_requests/1/diffs
 
 my_app = sly.AppService()
@@ -16,6 +18,14 @@ total_images_count = None
 image_ids = []
 project_meta: sly.ProjectMeta = None
 new_project_meta = None
+
+image_grid_options = {
+    "rows": 3,
+    "columns": 3,
+    "opacity": 0.8,
+    "fillRectangle": False
+}
+
 
 @my_app.callback("create_trainset")
 def do(api: sly.Api, task_id, context, state, app_logger):
@@ -39,6 +49,7 @@ def _count_train_val_split(train_percent, total_images_count):
 def count_split(api: sly.Api, task_id, context, state, app_logger):
     split_table = _count_train_val_split(state["trainPercent"], total_images_count)
     api.task.set_fields(task_id, [{"field": "data.splitTable", "payload": split_table}])
+
 
 @my_app.callback("preview")
 @sly.timeit
@@ -65,14 +76,8 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         ],
     }
 
-    options = {
-        "rows": 3,
-        "columns": 3,
-        "opacity": 0.8,
-        "fillRectangle": False
-    }
+    api.task.set_fields(task_id, [{"field": "data.preview.content", "payload": content}])
 
-    api.task.set_fields(task_id, [{"field": "data.preview", "payload": {"content": content, "options": options}}])
 
 def main():
     api = sly.Api.from_env()
@@ -80,6 +85,7 @@ def main():
 
     project = api.project.get_info_by_id(PROJECT_ID)
     project_meta = sly.ProjectMeta.from_json(api.project.get_meta(project.id))
+    validate_input_meta(project_meta)
 
     train_percent = 95
     total_images_count = api.project.get_images_count(project.id)
@@ -99,7 +105,7 @@ def main():
         "started": False,
         "totalImagesCount": total_images_count,
         "splitTable": split_table,
-        "preview": {}
+        "preview": {"content": {}, "options": image_grid_options}
     }
 
     state = {
