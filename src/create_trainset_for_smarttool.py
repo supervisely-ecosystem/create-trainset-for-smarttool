@@ -3,7 +3,7 @@ import random
 import string
 import supervisely_lib as sly
 
-from aug_utils import validate_input_meta, aug_project_meta
+from aug_utils import validate_input_meta, aug_project_meta, aug_img_ann
 
 # https://git.deepsystems.io/deepsystems/supervisely_py/-/merge_requests/1/diffs
 
@@ -55,27 +55,25 @@ def count_split(api: sly.Api, task_id, context, state, app_logger):
 @sly.timeit
 def preview(api: sly.Api, task_id, context, state, app_logger):
     image_id = random.choice(image_ids)
-    image = api.image.get_info_by_id(image_id)
+    image_info = api.image.get_info_by_id(image_id)
+    img_url = image_info.full_storage_url
 
-    img_url = image.full_storage_url
-
+    img = api.image.download_np(image_info.id)
     ann_json = api.annotation.download(image_id).annotation
     ann = sly.Annotation.from_json(ann_json, project_meta)
 
-    obj_class_name = state["className"]
-    pos_class_name = state["posClassName"]
-    neg_class_name = state["negClassName"]
-    res_meta, obj_class, pos_class, neg_class, train_tag, val_tag = \
-        aug_project_meta(project_meta, obj_class_name, pos_class_name, neg_class_name)
+    res_meta = aug_project_meta(project_meta, state)
+    imgs_anns = aug_img_ann(img, ann, res_meta, state)
 
+    x = 10
     content = {
         "projectMeta": project_meta.to_json(),
         "annotations": [
-            {"url": image.full_storage_url, "figures": [label.to_json() for label in ann.labels]},
-            {"url": image.full_storage_url, "figures": []},
-            {"url": image.full_storage_url, "figures": []},
-            {"url": image.full_storage_url, "figures": []},
-            {"url": image.full_storage_url, "figures": []},
+            {"url": img_url, "figures": [label.to_json() for label in ann.labels]},
+            {"url": img_url, "figures": []},
+            {"url": img_url, "figures": []},
+            {"url": img_url, "figures": []},
+            {"url": img_url, "figures": []},
         ],
     }
 
@@ -113,7 +111,7 @@ def main():
 
     state = {
         "trainPercent": train_percent,
-        "filterPercent": 5,
+        "filterPercent": 1,
         "paddingRange": [5, 10],
         "minPointsCount": 0,
         "inputWidth": 256,
@@ -125,15 +123,16 @@ def main():
 
     initial_events = [
         {
-            "state": None,
+            "state": state,
             "context": None,
             "command": "preview",
         }
     ]
 
     # Run application service
+    # filter percent - reimplement - filter by min side
     my_app.run(data=data, state=state, initial_events=initial_events)
 
-
+#@TODO: found image without labels, try again
 if __name__ == "__main__":
     sly.main_wrapper("main", main)
