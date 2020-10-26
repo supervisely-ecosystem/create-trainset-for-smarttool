@@ -1,6 +1,7 @@
 import os
 import random
 import string
+import json
 import supervisely_lib as sly
 
 from aug_utils import validate_input_meta, aug_project_meta, aug_img_ann
@@ -18,11 +19,12 @@ total_images_count = None
 image_ids = []
 project_meta: sly.ProjectMeta = None
 new_project_meta = None
+CNT_GRID_COLUMNS = 3
 
 image_grid_options = {
     "rows": 3,
     "columns": 3,
-    "opacity": 0.8,
+    "opacity": 0.5,
     "fillRectangle": False
 }
 
@@ -65,17 +67,30 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     res_meta = aug_project_meta(project_meta, state)
     imgs_anns = aug_img_ann(img, ann, res_meta, state)
 
-    x = 10
-    content = {
-        "projectMeta": project_meta.to_json(),
-        "annotations": [
-            {"url": img_url, "figures": [label.to_json() for label in ann.labels]},
-            {"url": img_url, "figures": []},
-            {"url": img_url, "figures": []},
+    grid_data = {}
+    grid_layout = [[] for i in range(CNT_GRID_COLUMNS)]
 
-            {"url": img_url, "figures": []},
-            {"url": img_url, "figures": []},
-        ],
+    @sly.timeit
+    def _upload_augs():
+        for idx, (img, ann) in enumerate(imgs_anns):
+            img_name = "{:03d}.png".format(idx)
+            remote_path = "/temp/{}/{}".format(task_id, img_name)
+            if api.file.exists(TEAM_ID, remote_path):
+                api.file.remove(TEAM_ID, remote_path)
+            local_path = "{}/{}".format(my_app.data_dir, img_name)
+            sly.image.write(local_path, img)
+            api.file.upload(TEAM_ID, local_path, remote_path)
+            sly.fs.silent_remove(local_path)
+            info = api.file.get_info_by_path(TEAM_ID, remote_path)
+            grid_data[img_name] = {"url": info.full_storage_url, "figures": [label.to_json() for label in ann.labels]}
+            grid_layout[idx % CNT_GRID_COLUMNS].append(img_name)
+            api.task.set_fields(task_id, [{"field": "data.previewProgress", "payload": int((idx + 1) * 100.0 / len(imgs_anns))}])
+    _upload_augs()
+
+    content = {
+        "projectMeta": res_meta.to_json(),
+        "annotations": grid_data,
+        "layout": grid_layout
     }
     api.task.set_fields(task_id, [{"field": "data.preview.content", "payload": content}])
 
@@ -106,12 +121,13 @@ def main():
         "started": False,
         "totalImagesCount": total_images_count,
         "splitTable": split_table,
-        "preview": {"content": {}, "options": image_grid_options}
+        "preview": {"content": {}, "options": image_grid_options},
+        "previewProgress": 0
     }
 
     state = {
         "trainPercent": train_percent,
-        "filterThresh": 100,
+        "filterThresh": 135, #@TODO: for debug - return to 100
         "paddingRange": [5, 10],
         "minPointsCount": 0,
         "inputWidth": 256,

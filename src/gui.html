@@ -103,7 +103,8 @@
                         <i class="zmdi zmdi-grid" style="margin-right: 5px"></i> Preview
                     </el-button>
                 </div>
-                <sly-grid-gallery :content="data.preview.content" :options="data.preview.options"/>
+                <sly-grid-gallery v-if="data.previewProgress === 100" :content="data.preview.content" :options="data.preview.options"/>
+                <el-progress v-if="data.previewProgress !== 100" :percentage="data.previewProgress"></el-progress>
             </sly-card>
         </el-col>
     </el-row>

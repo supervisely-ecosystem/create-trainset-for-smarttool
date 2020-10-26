@@ -48,8 +48,9 @@ def ins_crop_and_resize(img, ann, cls_names, crop_conf, resize_conf):
 
 
 def aug_img_ann(img, ann: sly.Annotation, new_meta: sly.ProjectMeta, app_state):
+    results = []
     if len(ann.labels) == 0:
-        return []
+        return results
 
     obj_class = new_meta.get_obj_class(app_state["className"])
     pos_class = new_meta.get_obj_class(app_state["posClassName"])
@@ -61,10 +62,10 @@ def aug_img_ann(img, ann: sly.Annotation, new_meta: sly.ProjectMeta, app_state):
         new_labels.append(label.clone(obj_class=obj_class))
     res_ann = ann.clone(labels=new_labels)
 
-    # filter objects by area percent
-    # res_ann = res_ann.filter_labels_by_area_percent(app_state["filterPercent"])
-    # if len(ann.labels) == 0:
-    #    return []
+    # filter objects by min side
+    res_ann = res_ann.filter_labels_by_min_side(app_state["filterThresh"])
+    if len(ann.labels) == 0:
+       return results
 
     def _rand_padding():
         return random.randint(app_state["paddingRange"][0], app_state["paddingRange"][1])
