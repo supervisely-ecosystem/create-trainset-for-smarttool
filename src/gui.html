@@ -29,12 +29,11 @@
         <el-col :span="8">
             <sly-card title="Augmentation settings" subtitle="You can keep default values"
                       style="margin-top: 10px">
-                <sly-field title="Objects filter by area"
-                           description="Filter objects with area less than defined.
-                                        Object area is measured in percent of image">
-                    <el-slider v-model="state.filterPercent" :min="0" :max="10" show-input></el-slider>
+                <sly-field title="Objects filter by size (in pixels)"
+                           description="Filter objects if minimum side is less than threshold">
+                    <el-slider v-model="state.filterThresh" :min="0" show-input></el-slider>
                 </sly-field>
-                <sly-field title="Objects crop"
+                <sly-field title="Padding for objects crop"
                            description="Padding is randomly sampled from defined range.
                                         Padding is measured in percent of corresponding side
                                         (width of height of bounding box)">

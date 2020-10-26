@@ -72,11 +72,11 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
             {"url": img_url, "figures": [label.to_json() for label in ann.labels]},
             {"url": img_url, "figures": []},
             {"url": img_url, "figures": []},
+
             {"url": img_url, "figures": []},
             {"url": img_url, "figures": []},
         ],
     }
-
     api.task.set_fields(task_id, [{"field": "data.preview.content", "payload": content}])
 
 
@@ -111,7 +111,7 @@ def main():
 
     state = {
         "trainPercent": train_percent,
-        "filterPercent": 1,
+        "filterThresh": 100,
         "paddingRange": [5, 10],
         "minPointsCount": 0,
         "inputWidth": 256,
@@ -132,7 +132,6 @@ def main():
     # Run application service
     # filter percent - reimplement - filter by min side
     # filter - заменить слайдер на input number
-    # report histogram of objects width/height/area-px/area-percent
     my_app.run(data=data, state=state, initial_events=initial_events)
 
 #@TODO: found image without labels, try again
