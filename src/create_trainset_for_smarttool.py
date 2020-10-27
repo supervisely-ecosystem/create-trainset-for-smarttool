@@ -118,6 +118,9 @@ def main():
     project_meta = sly.ProjectMeta.from_json(api.project.get_meta(project.id))
     validate_input_meta(project_meta)
 
+    res_project_name = "{} (train SmartTool)".format(project.name)
+    res_project_name = api.project.get_free_name(WORKSPACE_ID, res_project_name)
+
     train_percent = 95
     total_images_count = api.project.get_images_count(project.id)
     split_table = _count_train_val_split(train_percent, total_images_count)
@@ -153,7 +156,8 @@ def main():
         "negClassName": "neg",
         "flipHorizontal": True,
         "flipVertical": False,
-        "imageDuplicate": 2
+        "imageDuplicate": 2,
+        "resultProjectName": res_project_name
     }
 
     initial_events = [

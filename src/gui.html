@@ -69,8 +69,9 @@
             </sly-card>
             <sly-card title="Settings" subtitle="basic settings" style="margin-top: 10px">
                 <sly-field title="Result project name"
-                           description="New project with augmentations in the same workspace will be created. Use this project to train SmartTool">
-                    <div>sdad</div>
+                           description="New project with augmentations in the same workspace will be created.
+                           Use this project to train SmartTool">
+                    <el-input size="small" v-model="state.resultProjectName"></el-input>
                 </sly-field>
 
                 <sly-field title="Train / Val split"
