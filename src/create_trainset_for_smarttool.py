@@ -230,6 +230,7 @@ def main():
 #@TODO: empty message never shows
 #@TODO: bulk upload to files to optimize preview
 #@TODO: customize icon and add positive/negative points
+#@TODO: create modal html
 
 if __name__ == "__main__":
     sly.main_wrapper("main", main)
