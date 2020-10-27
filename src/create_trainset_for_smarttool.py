@@ -22,10 +22,10 @@ new_project_meta = None
 CNT_GRID_COLUMNS = 3
 
 image_grid_options = {
-    "rows": 3,
-    "columns": 3,
     "opacity": 0.5,
-    "fillRectangle": False
+    "fillRectangle": False,
+    "enableZoom": False,
+    "syncViews": False
 }
 
 
