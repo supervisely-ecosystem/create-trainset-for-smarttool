@@ -16,6 +16,6 @@
   "icon_background": "#FFFFFF",
   "context_menu": {
     "target": ["images_project"],
-    "context_root": "Training Data"
+    "context_category": "Training data"
   }
 }
