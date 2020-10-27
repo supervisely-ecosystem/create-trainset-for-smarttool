@@ -27,9 +27,9 @@
 
     <el-row :gutter="10" type="flex">
         <el-col :span="8">
-            <sly-card :disabled="data.finished === true" title="Augmentation settings" subtitle="You can keep default values"
+            <sly-card title="Augmentation settings" subtitle="You can keep default values"
                       style="margin-top: 10px">
-                </sly-field title="Duplicate input image"
+                <sly-field title="Duplicate input image"
                             description="Choose duplication factor. Every image will be duplicated. It helps to slightly
                             augment positive/negative points positions and object crops. 1 means no duplicates.">
                     <el-input-number :disabled="data.finished === true"
