@@ -229,6 +229,7 @@ def main():
 #@TODO: clean directory in files
 #@TODO: empty message never shows
 #@TODO: bulk upload to files to optimize preview
+#@TODO: customize icon and add positive/negative points
 
 if __name__ == "__main__":
     sly.main_wrapper("main", main)
