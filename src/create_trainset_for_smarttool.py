@@ -28,13 +28,6 @@ image_grid_options = {
     "syncViews": False
 }
 
-
-@my_app.callback("create_trainset")
-def do(api: sly.Api, task_id, context, state, app_logger):
-    print("123")
-    pass
-
-
 def _count_train_val_split(train_percent, total_images_count):
     train_images_count = max(1, min(total_images_count - 1, int(total_images_count * train_percent / 100)))
     val_images_count = total_images_count - train_images_count
@@ -107,8 +100,75 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
 @my_app.callback("create_trainset")
 @sly.timeit
 def create_trainset(api: sly.Api, task_id, context, state, app_logger):
-    pass
+    api.task.set_field(task_id, "data.started", True)
 
+    project = api.project.get_info_by_id(PROJECT_ID)
+    meta = sly.ProjectMeta.from_json(api.project.get_meta(project.id))
+    res_meta = aug_project_meta(meta, state)
+
+    result_project_name = state["resultProjectName"]
+    if not result_project_name:
+        result_project_name = _get_res_project_name(api, project)
+    new_project = api.project.create(WORKSPACE_ID, result_project_name, change_name_if_conflict=True)
+    api.project.update_meta(new_project.id, res_meta.to_json())
+
+    datasets = api.dataset.get_list(PROJECT_ID)
+    progress = sly.Progress("Augmentations", total_images_count)
+
+    current_progress = 0
+    for dataset in datasets:
+        new_dataset = api.dataset.create(new_project.id, dataset.name)
+        images = api.image.get_list(dataset.id)
+
+        used_names = []
+        for batch in sly.batched(images):
+            image_ids = [image_info.id for image_info in batch]
+            image_names = [image_info.name for image_info in batch]
+            images_np = api.image.download_nps(dataset.id, image_ids)
+            ann_infos = api.annotation.download_batch(dataset.id, image_ids)
+            new_annotations = []
+            new_images = []
+            new_images_names = []
+            for image_np, image_name, ann_info in zip(images_np, image_names, ann_infos):
+                used_names.append(image_name)
+                ann = sly.Annotation.from_json(ann_info.annotation, meta)
+
+                imgs_anns = aug_img_ann(image_np, ann, res_meta, state)
+                if len(imgs_anns) == 0:
+                    continue
+
+                for (aug_img, aug_ann) in imgs_anns:
+                    new_images.append(aug_img)
+                    name = sly._utils.generate_free_name(used_names, image_name, with_ext=True)
+                    new_images_names.append(name)
+                    new_annotations.append(aug_ann)
+                    used_names.append(name)
+
+            new_image_infos = api.image.upload_nps(new_dataset.id, new_images_names, new_images)
+            image_ids = [img_info.id for img_info in new_image_infos]
+            api.annotation.upload_anns(image_ids, new_annotations)
+            progress.iters_done_report(len(batch))
+            current_progress += len(batch)
+            api.task.set_field(task_id, "data.progress", int(current_progress * 100 / total_images_count))
+
+    # to get correct "reference_image_url"
+    res_project = api.project.get_info_by_id(new_project.id)
+    fields = [
+        {"field": "data.resultProject", "payload": res_project.name},
+        {"field": "data.resultProjectId", "payload": res_project.id},
+        {"field": "data.resultProjectPreviewUrl",
+         "payload": api.image.preview_url(res_project.reference_image_url, 100, 100)},
+        #{"field": "data.started", "payload": False}
+    ]
+    api.task.set_fields(task_id, fields)
+
+    #@TODO uncomment
+    #my_app.stop()
+
+def _get_res_project_name(api, project):
+    res_project_name = "{} (train SmartTool)".format(project.name)
+    res_project_name = api.project.get_free_name(WORKSPACE_ID, res_project_name)
+    return res_project_name
 
 def main():
     api = sly.Api.from_env()
@@ -118,8 +178,7 @@ def main():
     project_meta = sly.ProjectMeta.from_json(api.project.get_meta(project.id))
     validate_input_meta(project_meta)
 
-    res_project_name = "{} (train SmartTool)".format(project.name)
-    res_project_name = api.project.get_free_name(WORKSPACE_ID, res_project_name)
+    res_project_name = _get_res_project_name(api, project)
 
     train_percent = 95
     total_images_count = api.project.get_images_count(project.id)
@@ -171,6 +230,10 @@ def main():
     # Run application service
     my_app.run(data=data, state=state, initial_events=initial_events)
 
-#@TODO: found image without labels, try again
+#@TODO: clean directory in files
+#@TODO: empty message never shows
+#@TODO: bulk upload to files to optimize preview
+#@TODO: uncomment my app-stop
+
 if __name__ == "__main__":
     sly.main_wrapper("main", main)
