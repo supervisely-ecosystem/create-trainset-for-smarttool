@@ -28,15 +28,19 @@ All classes will be converted to a single class, then instances crop will be per
 
 ### Step 1: Run from context menu of project
 
-Go to "Context Menu" (images project) -> "Run App" -> "Training data" -> "Create Trainset for SmartTool"
+Go to "Context Menu" of project with images -> "Run App" -> "Training data" -> "Create Trainset for SmartTool"
 
-<img src="https://i.imgur.com/6jVrnAK.png" width="600"/>
+<img src="https://i.imgur.com/0uTRa3V.png" width="600"/>
 
 ### Step 2:  Waiting until the app is started
 Once app is started, new task appear in workspace tasks. Wait message `Application is started ...` (1) and then press `Open` button (2).
 
-<img src="https://i.imgur.com/eeA4VMQ.png"/>
+<img src="https://i.imgur.com/C6zo9Q2.png"/>
 
 ### Step 3: Define augmentations
 
-...
+On the left side you will see the augmentation options. You can keep the default settings. You can press `Preview` button to see the augmentations applied to a random image. Press `Run` button to start the augmentation process. As a result new project will be created. Once all augmentations are applied, the app will be stopped automatically. 
+
+
+<img src="https://i.imgur.com/t5HZgXf.png"/>
+
