@@ -133,7 +133,9 @@ def create_trainset(api: sly.Api, task_id, context, state, app_logger):
     result_project_name = state["resultProjectName"]
     if not result_project_name:
         result_project_name = _get_res_project_name(api, project)
-    new_project = api.project.create(WORKSPACE_ID, result_project_name, change_name_if_conflict=True)
+    new_project = api.project.create(WORKSPACE_ID, result_project_name,
+                                     description="for SmartTool",
+                                     change_name_if_conflict=True)
     api.project.update_meta(new_project.id, res_meta.to_json())
 
     datasets = api.dataset.get_list(PROJECT_ID)
@@ -174,7 +176,7 @@ def create_trainset(api: sly.Api, task_id, context, state, app_logger):
             for image_np, image_name, ann_info in zip(images_np, image_names, ann_infos):
                 used_names.append(image_name)
                 ann = sly.Annotation.from_json(ann_info.annotation, meta)
-                ann = ann.add_tag(tag)
+                ann = ann.clone(img_tags=sly.TagCollection([tag]))
 
                 imgs_anns = aug_img_ann(image_np, ann, res_meta, state)
                 if len(imgs_anns) == 0:
@@ -278,7 +280,6 @@ def main():
 #@TODO: bulk upload to files to optimize preview
 #@TODO: customize icon and add positive/negative points
 #@TODO: create modal html
-#@TODO: train/val tagging
 
 if __name__ == "__main__":
     sly.main_wrapper("main", main)
