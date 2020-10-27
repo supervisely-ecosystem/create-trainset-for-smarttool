@@ -1,7 +1,9 @@
 import os
 import random
-import string
 import supervisely_lib as sly
+
+from aug_utils import validate_input_meta, aug_project_meta, aug_img_ann
+
 
 my_app = sly.AppService()
 
@@ -9,54 +11,224 @@ TEAM_ID = int(os.environ['context.teamId'])
 WORKSPACE_ID = int(os.environ['context.workspaceId'])
 PROJECT_ID = int(os.environ['modal.state.slyProjectId'])
 
+project = None
+total_images_count = None
+image_ids = []
+project_meta: sly.ProjectMeta = None
+new_project_meta = None
+CNT_GRID_COLUMNS = 3
 
-@my_app.callback("apply_to_random_image")
+image_grid_options = {
+    "opacity": 0.5,
+    "fillRectangle": False,
+    "enableZoom": False,
+    "syncViews": False
+}
+
+def _count_train_val_split(train_percent, total_images_count):
+    train_images_count = max(1, min(total_images_count - 1, int(total_images_count * train_percent / 100)))
+    val_images_count = total_images_count - train_images_count
+    split_table = [
+        {"name": "total images", "count": total_images_count},
+        {"name": "train images", "count": train_images_count},
+        {"name": "val images", "count": val_images_count}
+    ]
+    return split_table
+
+
+@my_app.callback("count_train_val_split")
 @sly.timeit
-def apply_to_random_image(api: sly.Api, task_id, context, state, app_logger):
-    pass
+def count_split(api: sly.Api, task_id, context, state, app_logger):
+    split_table = _count_train_val_split(state["trainPercent"], total_images_count)
+    api.task.set_fields(task_id, [{"field": "data.splitTable", "payload": split_table}])
 
 
-def do(project_meta, img, ann):
-    pass
+@my_app.callback("preview")
+@sly.timeit
+def preview(api: sly.Api, task_id, context, state, app_logger):
+    image_id = random.choice(image_ids)
+    image_info = api.image.get_info_by_id(image_id)
+    img_url = image_info.full_storage_url
 
+    img = api.image.download_np(image_info.id)
+    ann_json = api.annotation.download(image_id).annotation
+    ann = sly.Annotation.from_json(ann_json, project_meta)
+
+    res_meta = aug_project_meta(project_meta, state)
+    combined_meta = project_meta.merge(res_meta)
+
+    imgs_anns = aug_img_ann(img, ann, res_meta, state)
+    imgs_anns = [(img, ann)] + imgs_anns
+
+    grid_data = {}
+    grid_layout = [[] for i in range(CNT_GRID_COLUMNS)]
+
+    @sly.timeit
+    def _upload_augs():
+        if len(imgs_anns) == 0:
+            api.task.set_fields(task_id, [{"field": "data.showEmptyMessage", "payload": True}])
+            return
+
+        #TODO: clean folder in files
+        for idx, (cur_img, cur_ann) in enumerate(imgs_anns):
+            img_name = "{:03d}.png".format(idx)
+            remote_path = "/temp/{}/{}".format(task_id, img_name)
+            if api.file.exists(TEAM_ID, remote_path):
+                api.file.remove(TEAM_ID, remote_path)
+            local_path = "{}/{}".format(my_app.data_dir, img_name)
+            sly.image.write(local_path, cur_img)
+            api.file.upload(TEAM_ID, local_path, remote_path)
+            sly.fs.silent_remove(local_path)
+            info = api.file.get_info_by_path(TEAM_ID, remote_path)
+            grid_data[img_name] = {"url": info.full_storage_url, "figures": [label.to_json() for label in cur_ann.labels]}
+            grid_layout[idx % CNT_GRID_COLUMNS].append(img_name)
+            api.task.set_fields(task_id, [{"field": "data.previewProgress", "payload": int((idx + 1) * 100.0 / len(imgs_anns))}])
+
+    _upload_augs()
+
+    if len(grid_data) > 0:
+        content = {
+            "projectMeta": combined_meta.to_json(),
+            "annotations": grid_data,
+            "layout": grid_layout
+        }
+        api.task.set_fields(task_id, [{"field": "data.preview.content", "payload": content}])
+
+@my_app.callback("create_trainset")
+@sly.timeit
+def create_trainset(api: sly.Api, task_id, context, state, app_logger):
+    api.task.set_field(task_id, "data.started", True)
+
+    project = api.project.get_info_by_id(PROJECT_ID)
+    meta = sly.ProjectMeta.from_json(api.project.get_meta(project.id))
+    res_meta = aug_project_meta(meta, state)
+
+    result_project_name = state["resultProjectName"]
+    if not result_project_name:
+        result_project_name = _get_res_project_name(api, project)
+    new_project = api.project.create(WORKSPACE_ID, result_project_name, change_name_if_conflict=True)
+    api.project.update_meta(new_project.id, res_meta.to_json())
+
+    datasets = api.dataset.get_list(PROJECT_ID)
+    progress = sly.Progress("Augmentations", total_images_count)
+
+    current_progress = 0
+    for dataset in datasets:
+        new_dataset = api.dataset.create(new_project.id, dataset.name)
+        images = api.image.get_list(dataset.id)
+
+        used_names = []
+        for batch in sly.batched(images):
+            image_ids = [image_info.id for image_info in batch]
+            image_names = [image_info.name for image_info in batch]
+            images_np = api.image.download_nps(dataset.id, image_ids)
+            ann_infos = api.annotation.download_batch(dataset.id, image_ids)
+            new_annotations = []
+            new_images = []
+            new_images_names = []
+            for image_np, image_name, ann_info in zip(images_np, image_names, ann_infos):
+                used_names.append(image_name)
+                ann = sly.Annotation.from_json(ann_info.annotation, meta)
+
+                imgs_anns = aug_img_ann(image_np, ann, res_meta, state)
+                if len(imgs_anns) == 0:
+                    continue
+
+                for (aug_img, aug_ann) in imgs_anns:
+                    new_images.append(aug_img)
+                    name = sly._utils.generate_free_name(used_names, image_name, with_ext=True)
+                    new_images_names.append(name)
+                    new_annotations.append(aug_ann)
+                    used_names.append(name)
+
+            new_image_infos = api.image.upload_nps(new_dataset.id, new_images_names, new_images)
+            image_ids = [img_info.id for img_info in new_image_infos]
+            api.annotation.upload_anns(image_ids, new_annotations)
+            progress.iters_done_report(len(batch))
+            current_progress += len(batch)
+            api.task.set_field(task_id, "data.progress", int(current_progress * 100 / total_images_count))
+
+    # to get correct "reference_image_url"
+    res_project = api.project.get_info_by_id(new_project.id)
+    fields = [
+        {"field": "data.resultProject", "payload": res_project.name},
+        {"field": "data.resultProjectId", "payload": res_project.id},
+        {"field": "data.resultProjectPreviewUrl",
+         "payload": api.image.preview_url(res_project.reference_image_url, 100, 100)},
+        #{"field": "data.started", "payload": False}
+    ]
+    api.task.set_fields(task_id, fields)
+
+    my_app.stop()
+
+def _get_res_project_name(api, project):
+    res_project_name = "{} (train SmartTool)".format(project.name)
+    res_project_name = api.project.get_free_name(WORKSPACE_ID, res_project_name)
+    return res_project_name
 
 def main():
     api = sly.Api.from_env()
-    image_id = 313996
+    global project, total_images_count, image_ids, project_meta, new_project_meta
 
     project = api.project.get_info_by_id(PROJECT_ID)
-    image_info = api.image.get_info_by_id(image_id)
-    
+    project_meta = sly.ProjectMeta.from_json(api.project.get_meta(project.id))
+    validate_input_meta(project_meta)
 
-    x = 10
-    return
+    res_project_name = _get_res_project_name(api, project)
 
+    train_percent = 95
+    total_images_count = api.project.get_images_count(project.id)
+    split_table = _count_train_val_split(train_percent, total_images_count)
+
+    for dataset in api.dataset.get_list(project.id):
+        image_infos = api.image.get_list(dataset.id)
+        image_ids.extend([info.id for info in image_infos])
+
+    my_app.logger.info("Image ids are initialized", extra={"count": len(image_ids)})
 
     data = {
-        "randomString": "hello!"
+        "projectId": project.id,
+        "projectName": project.name,
+        "projectPreviewUrl": api.image.preview_url(project.reference_image_url, 100, 100),
+        "progress": 0,
+        "started": False,
+        "totalImagesCount": total_images_count,
+        "splitTable": split_table,
+        "preview": {"content": {}, "options": image_grid_options},
+        "previewProgress": 0,
+        "showEmptyMessage": False
     }
 
     state = {
-        "prefix": "abc_"
+        "trainPercent": train_percent,
+        "filterThresh": 30,
+        "paddingRange": [5, 15],
+        "minPointsCount": 0,
+        "inputWidth": 256,
+        "inputHeight": 256,
+        "className": "obj",
+        "posClassName": "pos",
+        "negClassName": "neg",
+        "flipHorizontal": True,
+        "flipVertical": False,
+        "imageDuplicate": 1,
+        "resultProjectName": res_project_name
     }
 
     initial_events = [
         {
-            "state": None,
+            "state": state,
             "context": None,
-            "command": "preprocessing",
-        }#,
-        # {
-        #     "state": None,
-        #     "context": None,
-        #     "command": "stop",
-        # }
+            "command": "preview",
+        }
     ]
 
     # Run application service
     my_app.run(data=data, state=state, initial_events=initial_events)
-    my_app.wait_all()
 
+#@TODO: clean directory in files
+#@TODO: empty message never shows
+#@TODO: bulk upload to files to optimize preview
 
 if __name__ == "__main__":
     sly.main_wrapper("main", main)

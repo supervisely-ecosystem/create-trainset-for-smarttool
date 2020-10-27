@@ -1,14 +1,139 @@
 <div>
-    <sly-style> li {
-        padding-bottom: 5px;
-    }
-    </sly-style>
+    <el-row :gutter="10" type="flex">
+        <el-col :span="8">
+            <sly-card title="Input">
+                <sly-field title="" description="Project">
+                    <a slot="title" target="_blank"
+                       :href="`/projects/${data.projectId}/datasets`">{{data.projectName}}</a>
+                    <sly-icon slot="icon" :options="{ imageUrl: `${data.projectPreviewUrl}` }"/>
+                </sly-field>
+            </sly-card>
+        </el-col>
+        <el-col :span="16" style="flex: 1">
+            <sly-card title="Output" style="height: 100%">
+                <sly-field v-if="data.progress === 100" title=""
+                           description="New project has been successfully created">
+                    <a slot="title" target="_blank" :href="`/projects/${data.resultProjectId}/datasets`">{{data.resultProject}}</a>
+                    <sly-icon slot="icon" :options="{ imageUrl: `${data.resultProjectPreviewUrl}` }"/>
+                </sly-field>
+                <el-progress v-if="data.started === true && data.progress !== 100"
+                             :percentage="data.progress"></el-progress>
+                <el-button type="primary" @click="command('create_trainset')" v-if="data.started === false">
+                    <i class="zmdi zmdi-play" style="margin-right: 5px"></i> Run
+                </el-button>
+            </sly-card>
+        </el-col>
+    </el-row>
 
-    <b>Overview:</b>
-    <ul>
-        <li>Result project name = original name + "(train SmartTool)" suffix</li>
-        <li>Your data is safe: app creates new project with modified classes and objects. The original project will
-            remain unchanged
-        </li>
-    </ul>
+    <el-row :gutter="10" type="flex">
+        <el-col :span="8">
+            <sly-card title="Augmentation settings" subtitle="You can keep default values"
+                      style="margin-top: 10px">
+                </sly-field title="Duplicate input image"
+                            description="Choose duplication factor. Every image will be duplicated. It helps to slightly
+                            augment positive/negative points positions and object crops. 1 means no duplicates.">
+                    <el-input-number v-model="state.imageDuplicate" size="small" :min="1" :max="5"></el-input-number>
+                </sly-field>
+                <sly-field title="Objects filter by size (in pixels)"
+                           description="Filter objects if minimum side is less than threshold">
+                    <el-input-number v-model="state.filterThresh" size="small" :min="0" :max="500"></el-input-number>
+                </sly-field>
+                <sly-field title="Padding for objects crop"
+                           description="Padding is randomly sampled from defined range.
+                                        Padding is measured in percent of corresponding side
+                                        (width of height of bounding box)">
+                    <div class="fflex">
+                        <el-slider v-model="state.paddingRange" range :min="2" :max="50"
+                                   style="width: 100%"></el-slider>
+                        <div style="margin-left: 20px; flex: none">[{{state.paddingRange[0]}}%,
+                            {{state.paddingRange[1]}}%]
+                        </div>
+                    </div>
+                </sly-field>
+                <sly-field title="Min points count (hints)" description="Min number of positive and negative points">
+                    <el-input-number v-model="state.minPointsCount" size="small" :min="0" :max="20"></el-input-number>
+                </sly-field>
+                <sly-field title="Image transforms" description="spatial level transforms">
+                    <div class="fflex">
+                        <el-checkbox v-model="state.flipHorizontal">Horizontal flip (left <i class="zmdi zmdi-swap"></i>
+                            right)
+                        </el-checkbox>
+                    </div>
+                    <div class="fflex" style="margin-top: 10px">
+                        <el-checkbox v-model="state.flipVertical">Vertical flip (up <i
+                                class="zmdi zmdi-swap-vertical"></i> down)
+                        </el-checkbox>
+                    </div>
+                </sly-field>
+
+            </sly-card>
+            <sly-card title="Settings" subtitle="basic settings" style="margin-top: 10px">
+                <sly-field title="Result project name"
+                           description="New project with augmentations in the same workspace will be created.
+                           Use this project to train SmartTool">
+                    <el-input size="small" v-model="state.resultProjectName"></el-input>
+                </sly-field>
+
+                <sly-field title="Train / Val split"
+                           description="Choose the percent of images for training. As a result, at least one image have to be in train/val dataset">
+                    <el-slider v-model="state.trainPercent" :min="20" :max="100" show-input></el-slider>
+
+                    <el-button type="text" @click="command('count_train_val_split')">
+                        <i class="zmdi zmdi-refresh"></i> Refresh stats
+                    </el-button>
+
+                    <el-table :data="data.splitTable" :show-header="false">
+                        <el-table-column prop="name" label="Name"></el-table-column>
+                        <el-table-column prop="count" label="Count"></el-table-column>
+                    </el-table>
+                </sly-field>
+
+                <div style="border-bottom: 1px solid #e3e6ec; margin: 10px 0"></div>
+                <sly-field title="NN input size (in pixels)"
+                           description="All augmented images will be resized to this model input resolution">
+                    <div class="fflex">
+                        <div style="margin-right: 3px">W x H :</div>
+                        <el-input-number v-model="state.inputWidth" style="width:60px" :min="64" :max="1024"
+                                         size="small" :controls="false"></el-input-number>
+                        <div style="margin: 0 3px">x</div>
+                        <el-input-number v-model="state.inputHeight" style="width:60px" :min="64" :max="1024"
+                                         size="small" :controls="false"></el-input-number>
+                    </div>
+                </sly-field>
+
+                <div style="border-bottom: 1px solid #e3e6ec; margin: 10px 0"></div>
+                <sly-field title="Destination class name" description="All objects will be mapped to a single class">
+                    <el-input size="small" v-model="state.className"></el-input>
+                </sly-field>
+                <sly-field title="Point class name " description="Define class name for positive/negative points">
+                    <div class="fflex">
+                        <b style="flex: none; display: inline-block; border-radius: 50%; background: limegreen; width: 8px; height: 8px; margin-right: 3px"></b>
+                        <div style="margin-right: 3px; width: 60px; flex: none;">Positive:</div>
+                        <el-input size="small" v-model="state.posClassName"></el-input>
+                    </div>
+                    <div class="fflex" style="margin-top: 10px">
+                        <b style="flex: none; display: inline-block; border-radius: 50%; background: red; width: 8px; height: 8px; margin-right: 3px"></b>
+                        <div style="margin-right: 3px; width: 60px; flex: none;">Negative:</div>
+                        <el-input size="small" v-model="state.negClassName"></el-input>
+                    </div>
+                </sly-field>
+            </sly-card>
+        </el-col>
+        <el-col :span="16" style="flex: 1">
+            <sly-card title="Preview on random image"
+                      subtitle="Preview both original image and augmentation results"
+                      style="margin-top: 10px">
+                <div slot="header">
+                    <el-button type="primary" @click="command('preview'); state.showEmptyMessage=false">
+                        <i class="zmdi zmdi-grid" style="margin-right: 5px"></i> Preview
+                    </el-button>
+                </div>
+                <sly-grid-gallery v-if="data.previewProgress === 100" :content="data.preview.content"
+                                  :options="data.preview.options"/>
+                <el-progress v-if="data.previewProgress !== 100" :percentage="data.previewProgress"></el-progress>
+            </sly-card>
+        </el-col>
+    </el-row>
+
+
 </div>
