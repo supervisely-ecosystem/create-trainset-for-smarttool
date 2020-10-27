@@ -75,17 +75,18 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
 
     @sly.timeit
     def _upload_augs():
-        for idx, (img, ann) in enumerate(imgs_anns):
+        #TODO: clean folder in files
+        for idx, (cur_img, cur_ann) in enumerate(imgs_anns):
             img_name = "{:03d}.png".format(idx)
             remote_path = "/temp/{}/{}".format(task_id, img_name)
             if api.file.exists(TEAM_ID, remote_path):
                 api.file.remove(TEAM_ID, remote_path)
             local_path = "{}/{}".format(my_app.data_dir, img_name)
-            sly.image.write(local_path, img)
+            sly.image.write(local_path, cur_img)
             api.file.upload(TEAM_ID, local_path, remote_path)
             sly.fs.silent_remove(local_path)
             info = api.file.get_info_by_path(TEAM_ID, remote_path)
-            grid_data[img_name] = {"url": info.full_storage_url, "figures": [label.to_json() for label in ann.labels]}
+            grid_data[img_name] = {"url": info.full_storage_url, "figures": [label.to_json() for label in cur_ann.labels]}
             grid_layout[idx % CNT_GRID_COLUMNS].append(img_name)
             api.task.set_fields(task_id, [{"field": "data.previewProgress", "payload": int((idx + 1) * 100.0 / len(imgs_anns))}])
 
@@ -131,8 +132,8 @@ def main():
 
     state = {
         "trainPercent": train_percent,
-        "filterThresh": 135, #@TODO: for debug - return to 100
-        "paddingRange": [5, 10],
+        "filterThresh": 30,
+        "paddingRange": [5, 15],
         "minPointsCount": 0,
         "inputWidth": 256,
         "inputHeight": 256,

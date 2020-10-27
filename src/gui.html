@@ -31,14 +31,14 @@
                       style="margin-top: 10px">
                 <sly-field title="Objects filter by size (in pixels)"
                            description="Filter objects if minimum side is less than threshold">
-                    <el-slider v-model="state.filterThresh" :min="0" show-input></el-slider>
+                    <el-input-number v-model="state.filterThresh" size="small" :min="0" :max="500"></el-input-number>
                 </sly-field>
                 <sly-field title="Padding for objects crop"
                            description="Padding is randomly sampled from defined range.
                                         Padding is measured in percent of corresponding side
                                         (width of height of bounding box)">
                     <div class="fflex">
-                        <el-slider v-model="state.paddingRange" range :min="2" :max="20"
+                        <el-slider v-model="state.paddingRange" range :min="2" :max="50"
                                    style="width: 100%"></el-slider>
                         <div style="margin-left: 20px; flex: none">[{{state.paddingRange[0]}}%,
                             {{state.paddingRange[1]}}%]
@@ -50,10 +50,10 @@
                 </sly-field>
                 <sly-field title="Image transforms" description="spatial level transforms">
                     <div class="fflex">
-                        <el-checkbox v-model="state.flipHorizontal">Horizontal flip</el-checkbox>
+                        <el-checkbox v-model="state.flipHorizontal">Horizontal flip (left <i class="zmdi zmdi-swap"></i> right)</el-checkbox>
                     </div>
                     <div class="fflex" style="margin-top: 10px">
-                        <el-checkbox v-model="state.flipVertical">Vertical flip</el-checkbox>
+                        <el-checkbox v-model="state.flipVertical">Vertical flip  (up <i class="zmdi zmdi-swap-vertical"></i> down)</el-checkbox>
                     </div>
                 </sly-field>
 
@@ -74,7 +74,7 @@
                 </sly-field>
 
                 <div style="border-bottom: 1px solid #e3e6ec; margin: 10px 0"></div>
-                <sly-field title="NN input size" description="Input model resolution (in pixels)">
+                <sly-field title="NN input size (in pixels)" description="All augmented images will be resized to this model input resolution">
                     <div class="fflex">
                         <div style="margin-right: 3px">W x H :</div>
                         <el-input-number v-model="state.inputWidth" style="width:60px" :min="64" :max="1024"
