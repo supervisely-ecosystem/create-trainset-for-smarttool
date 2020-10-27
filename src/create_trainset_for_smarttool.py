@@ -1,6 +1,7 @@
 import os
 import random
 import supervisely_lib as sly
+from collections import defaultdict
 
 from aug_utils import validate_input_meta, aug_project_meta, aug_img_ann
 
@@ -94,6 +95,32 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
         }
         api.task.set_fields(task_id, [{"field": "data.preview.content", "payload": content}])
 
+def sample_images(api, datasets, state):
+    split_table = _count_train_val_split(state["trainPercent"], total_images_count)
+    train_images_count = split_table[1]["count"]
+
+    all_images = []
+    for dataset in datasets:
+        images = api.image.get_list(dataset.id)
+        all_images.extend(images)
+    cnt_images = len(all_images)
+
+    shuffled_images = all_images.copy()
+    random.shuffle(shuffled_images)
+
+    train_images = shuffled_images[:train_images_count]
+    val_images = shuffled_images[train_images_count:]
+
+    ds_images_train = defaultdict(list)
+    for image_info in train_images:
+        ds_images_train[image_info.dataset_id].append(image_info)
+
+    ds_images_val = defaultdict(list)
+    for image_info in val_images:
+        ds_images_val[image_info.dataset_id].append(image_info)
+
+    return ds_images_train, ds_images_val, cnt_images
+
 @my_app.callback("create_trainset")
 @sly.timeit
 def create_trainset(api: sly.Api, task_id, context, state, app_logger):
@@ -110,11 +137,29 @@ def create_trainset(api: sly.Api, task_id, context, state, app_logger):
     api.project.update_meta(new_project.id, res_meta.to_json())
 
     datasets = api.dataset.get_list(PROJECT_ID)
+    ds_images_train, ds_images_val, sample_count = sample_images(api, datasets, state)
+
+    train_tag = res_meta.get_tag_meta("train")
+    val_tag = res_meta.get_tag_meta("val")
+    splitted_images = []
+
+    for dataset_id, images in ds_images_train.items():
+        splitted_images.append((dataset_id, images, train_tag))
+    for dataset_id, images in ds_images_val.items():
+        splitted_images.append((dataset_id, images, val_tag))
+
     progress = sly.Progress("Augmentations", total_images_count)
 
+    _created_datasets = {}
     current_progress = 0
-    for dataset in datasets:
-        new_dataset = api.dataset.create(new_project.id, dataset.name)
+    for (dataset_id, images, tag)  in splitted_images:
+        dataset = api.dataset.get_info_by_id(dataset_id)
+    # for dataset in datasets:
+        if dataset.name not in _created_datasets:
+            new_dataset = api.dataset.create(new_project.id, dataset.name)
+            _created_datasets[dataset.name] = new_dataset
+        new_dataset = _created_datasets[dataset.name]
+
         images = api.image.get_list(dataset.id)
 
         used_names = []
@@ -129,6 +174,7 @@ def create_trainset(api: sly.Api, task_id, context, state, app_logger):
             for image_np, image_name, ann_info in zip(images_np, image_names, ann_infos):
                 used_names.append(image_name)
                 ann = sly.Annotation.from_json(ann_info.annotation, meta)
+                ann = ann.add_tag(tag)
 
                 imgs_anns = aug_img_ann(image_np, ann, res_meta, state)
                 if len(imgs_anns) == 0:
@@ -232,6 +278,7 @@ def main():
 #@TODO: bulk upload to files to optimize preview
 #@TODO: customize icon and add positive/negative points
 #@TODO: create modal html
+#@TODO: train/val tagging
 
 if __name__ == "__main__":
     sly.main_wrapper("main", main)
