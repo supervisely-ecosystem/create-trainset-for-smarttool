@@ -1,12 +1,9 @@
 import os
 import random
-import string
-import json
 import supervisely_lib as sly
 
 from aug_utils import validate_input_meta, aug_project_meta, aug_img_ann
 
-# https://git.deepsystems.io/deepsystems/supervisely_py/-/merge_requests/1/diffs
 
 my_app = sly.AppService()
 
@@ -215,7 +212,7 @@ def main():
         "negClassName": "neg",
         "flipHorizontal": True,
         "flipVertical": False,
-        "imageDuplicate": 2,
+        "imageDuplicate": 1,
         "resultProjectName": res_project_name
     }
 
