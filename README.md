@@ -18,8 +18,25 @@
 
 </div>
 
+## Overview
 
-TODO: 
-- convert shape or rasterize (1. rasterize, 2. remove classes)... step is needed beacause of 
-objects intersection during annotation
-- raise error if not bitmaps
+This app created training dataset for SmartTool from labeled project. All classes in the input project have to be `Bitmaps`. Please, use app [Rasterize objects on images](https://github.com/supervisely-ecosystem/rasterize-objects-on-images) to raster all objects and prepare correct object masks. It is crucial for this app.  
+
+All classes will be converted to a single class, then instances crop will be performed and then positive/negative points will be randomly generated. 
+
+## How To Run
+
+### Step 1: Run from context menu of project
+
+Go to "Context Menu" (images project) -> "Run App" -> "Training data" -> "Create Trainset for SmartTool"
+
+<img src="https://i.imgur.com/6jVrnAK.png" width="600"/>
+
+### Step 2:  Waiting until the app is started
+Once app is started, new task appear in workspace tasks. Wait message `Application is started ...` (1) and then press `Open` button (2).
+
+<img src="https://i.imgur.com/eeA4VMQ.png"/>
+
+### Step 3: Define augmentations
+
+...
