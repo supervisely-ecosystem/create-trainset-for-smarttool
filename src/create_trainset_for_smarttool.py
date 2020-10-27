@@ -156,13 +156,14 @@ def create_trainset(api: sly.Api, task_id, context, state, app_logger):
     current_progress = 0
     for (dataset_id, images, tag)  in splitted_images:
         dataset = api.dataset.get_info_by_id(dataset_id)
+
     # for dataset in datasets:
         if dataset.name not in _created_datasets:
             new_dataset = api.dataset.create(new_project.id, dataset.name)
             _created_datasets[dataset.name] = new_dataset
         new_dataset = _created_datasets[dataset.name]
 
-        images = api.image.get_list(dataset.id)
+        #images = api.image.get_list(dataset.id)
 
         used_names = []
         for batch in sly.batched(images):
