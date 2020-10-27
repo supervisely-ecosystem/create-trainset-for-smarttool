@@ -110,7 +110,10 @@ def aug_img_ann(img, ann: sly.Annotation, new_meta: sly.ProjectMeta, app_state):
     if len(ann.labels) == 0:
        return results
 
-    inputs = [(img, res_ann)]
+    inputs = []
+    for i in range(app_state["imageDuplicate"]):
+        inputs.append((img, res_ann))
+
     # flip
     if app_state["flipHorizontal"] is True:
         img_lr, ann_lr = sly.aug.fliplr(img, res_ann)

@@ -75,6 +75,10 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
 
     @sly.timeit
     def _upload_augs():
+        if len(imgs_anns) == 0:
+            api.task.set_fields(task_id, [{"field": "data.showEmptyMessage", "payload": True}])
+            return
+
         #TODO: clean folder in files
         for idx, (cur_img, cur_ann) in enumerate(imgs_anns):
             img_name = "{:03d}.png".format(idx)
@@ -92,12 +96,18 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
 
     _upload_augs()
 
-    content = {
-        "projectMeta": combined_meta.to_json(),
-        "annotations": grid_data,
-        "layout": grid_layout
-    }
-    api.task.set_fields(task_id, [{"field": "data.preview.content", "payload": content}])
+    if len(grid_data) > 0:
+        content = {
+            "projectMeta": combined_meta.to_json(),
+            "annotations": grid_data,
+            "layout": grid_layout
+        }
+        api.task.set_fields(task_id, [{"field": "data.preview.content", "payload": content}])
+
+@my_app.callback("create_trainset")
+@sly.timeit
+def create_trainset(api: sly.Api, task_id, context, state, app_logger):
+    pass
 
 
 def main():
@@ -127,7 +137,8 @@ def main():
         "totalImagesCount": total_images_count,
         "splitTable": split_table,
         "preview": {"content": {}, "options": image_grid_options},
-        "previewProgress": 0
+        "previewProgress": 0,
+        "showEmptyMessage": False
     }
 
     state = {
@@ -141,7 +152,8 @@ def main():
         "posClassName": "pos",
         "negClassName": "neg",
         "flipHorizontal": True,
-        "flipVertical": False
+        "flipVertical": False,
+        "imageDuplicate": 2
     }
 
     initial_events = [
@@ -153,9 +165,6 @@ def main():
     ]
 
     # Run application service
-    # filter percent - reimplement - filter by min side
-    # filter - заменить слайдер на input number
-    # TODO: add original image to grid
     my_app.run(data=data, state=state, initial_events=initial_events)
 
 #@TODO: found image without labels, try again
