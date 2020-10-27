@@ -65,7 +65,10 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     ann = sly.Annotation.from_json(ann_json, project_meta)
 
     res_meta = aug_project_meta(project_meta, state)
+    combined_meta = project_meta.merge(res_meta)
+
     imgs_anns = aug_img_ann(img, ann, res_meta, state)
+    imgs_anns = [(img, ann)] + imgs_anns
 
     grid_data = {}
     grid_layout = [[] for i in range(CNT_GRID_COLUMNS)]
@@ -85,10 +88,11 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
             grid_data[img_name] = {"url": info.full_storage_url, "figures": [label.to_json() for label in ann.labels]}
             grid_layout[idx % CNT_GRID_COLUMNS].append(img_name)
             api.task.set_fields(task_id, [{"field": "data.previewProgress", "payload": int((idx + 1) * 100.0 / len(imgs_anns))}])
+
     _upload_augs()
 
     content = {
-        "projectMeta": res_meta.to_json(),
+        "projectMeta": combined_meta.to_json(),
         "annotations": grid_data,
         "layout": grid_layout
     }
@@ -134,7 +138,9 @@ def main():
         "inputHeight": 256,
         "className": "obj",
         "posClassName": "pos",
-        "negClassName": "neg"
+        "negClassName": "neg",
+        "flipHorizontal": True,
+        "flipVertical": False
     }
 
     initial_events = [
@@ -148,6 +154,7 @@ def main():
     # Run application service
     # filter percent - reimplement - filter by min side
     # filter - заменить слайдер на input number
+    # TODO: add original image to grid
     my_app.run(data=data, state=state, initial_events=initial_events)
 
 #@TODO: found image without labels, try again

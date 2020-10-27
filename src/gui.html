@@ -48,6 +48,15 @@
                 <sly-field title="Min points count (hints)" description="Min number of positive and negative points">
                     <el-input-number v-model="state.minPointsCount" size="small" :min="0" :max="20"></el-input-number>
                 </sly-field>
+                <sly-field title="Image transforms" description="spatial level transforms">
+                    <div class="fflex">
+                        <el-checkbox v-model="state.flipHorizontal">Horizontal flip</el-checkbox>
+                    </div>
+                    <div class="fflex" style="margin-top: 10px">
+                        <el-checkbox v-model="state.flipVertical">Vertical flip</el-checkbox>
+                    </div>
+                </sly-field>
+
             </sly-card>
             <sly-card title="Settings" subtitle="basic settings" style="margin-top: 10px">
                 <sly-field title="Train / Val split"
