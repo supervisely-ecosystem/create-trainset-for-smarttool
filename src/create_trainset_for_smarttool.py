@@ -155,7 +155,7 @@ def create_trainset(api: sly.Api, task_id, context, state, app_logger):
         {"field": "data.resultProjectId", "payload": res_project.id},
         {"field": "data.resultProjectPreviewUrl",
          "payload": api.image.preview_url(res_project.reference_image_url, 100, 100)},
-        #{"field": "data.started", "payload": False}
+        {"field": "data.finished", "payload": True}
     ]
     api.task.set_fields(task_id, fields)
 
@@ -196,7 +196,8 @@ def main():
         "splitTable": split_table,
         "preview": {"content": {}, "options": image_grid_options},
         "previewProgress": 0,
-        "showEmptyMessage": False
+        "showEmptyMessage": False,
+        "finished": False
     }
 
     state = {

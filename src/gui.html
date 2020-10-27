@@ -27,7 +27,7 @@
 
     <el-row :gutter="10" type="flex">
         <el-col :span="8">
-            <sly-card title="Augmentation settings" subtitle="You can keep default values"
+            <sly-card v-if="data.finished === false" title="Augmentation settings" subtitle="You can keep default values"
                       style="margin-top: 10px">
                 </sly-field title="Duplicate input image"
                             description="Choose duplication factor. Every image will be duplicated. It helps to slightly
@@ -67,7 +67,7 @@
                 </sly-field>
 
             </sly-card>
-            <sly-card title="Settings" subtitle="basic settings" style="margin-top: 10px">
+            <sly-card v-if="data.finished === false" title="Settings" subtitle="basic settings" style="margin-top: 10px">
                 <sly-field title="Result project name"
                            description="New project with augmentations in the same workspace will be created.
                            Use this project to train SmartTool">
@@ -120,7 +120,7 @@
             </sly-card>
         </el-col>
         <el-col :span="16" style="flex: 1">
-            <sly-card title="Preview on random image"
+            <sly-card v-if="data.finished === false" title="Preview on random image"
                       subtitle="Preview both original image and augmentation results"
                       style="margin-top: 10px">
                 <div slot="header">
