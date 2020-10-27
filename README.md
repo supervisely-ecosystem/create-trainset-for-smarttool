@@ -39,4 +39,8 @@ Once app is started, new task appear in workspace tasks. Wait message `Applicati
 
 ### Step 3: Define augmentations
 
-...
+On the left side you will see the augmentation options. You can keep the default settings. You can press `Preview` button to see the augmentations applied to a random image. Press `Run` button to start the augmentation process. As a result new project will be created. Once all augmentations are applied, the app will be stopped automatically. 
+
+
+<img src="https://i.imgur.com/t5HZgXf.png"/>
+
