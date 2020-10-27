@@ -120,7 +120,7 @@ def aug_img_ann(img, ann: sly.Annotation, new_meta: sly.ProjectMeta, app_state):
         inputs.append((img_lr, ann_lr))
 
     if app_state["flipVertical"] is True:
-        img_ud, ann_ud = sly.aug.flipup(img, res_ann)
+        img_ud, ann_ud = sly.aug.flipud(img, res_ann)
         inputs.append((img_ud, ann_ud))
 
     def _rand_padding():
