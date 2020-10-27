@@ -159,8 +159,7 @@ def create_trainset(api: sly.Api, task_id, context, state, app_logger):
     ]
     api.task.set_fields(task_id, fields)
 
-    #@TODO uncomment
-    #my_app.stop()
+    my_app.stop()
 
 def _get_res_project_name(api, project):
     res_project_name = "{} (train SmartTool)".format(project.name)
@@ -230,7 +229,6 @@ def main():
 #@TODO: clean directory in files
 #@TODO: empty message never shows
 #@TODO: bulk upload to files to optimize preview
-#@TODO: uncomment my app-stop
 
 if __name__ == "__main__":
     sly.main_wrapper("main", main)
