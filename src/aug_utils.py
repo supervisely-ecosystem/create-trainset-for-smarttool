@@ -102,7 +102,7 @@ def aug_img_ann(img, ann: sly.Annotation, new_meta: sly.ProjectMeta, app_state):
     # rename to single class
     new_labels = []
     for label in ann.labels:
-        new_labels.append(label.clone(obj_class=obj_class))
+        new_labels.append(label.clone(obj_class=obj_class, tags=sly.TagCollection())) #remove tags from objects
     res_ann = ann.clone(labels=new_labels)
 
     # filter objects by min side
