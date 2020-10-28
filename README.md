@@ -24,6 +24,8 @@ This app created training dataset for SmartTool from labeled project. All classe
 
 All classes will be converted to a single class, then instances crop will be performed and then positive/negative points will be randomly generated. 
 
+**Note**: Customization of SmartTool is available only in Enterprise Edition (EE).
+
 ## How To Run
 
 ### Step 1: Run from context menu of project
