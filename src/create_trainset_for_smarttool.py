@@ -36,6 +36,11 @@ def _count_train_val_split(train_percent, total_images_count):
     ]
     return split_table
 
+@my_app.callback("stop")
+@sly.timeit
+def stop(api: sly.Api, task_id, context, state, app_logger):
+    remote_path = "/temp/{}/".format(task_id)
+    api.file.remove(TEAM_ID, remote_path)
 
 @my_app.callback("count_train_val_split")
 @sly.timeit
