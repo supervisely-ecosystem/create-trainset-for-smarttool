@@ -41,6 +41,7 @@ def _count_train_val_split(train_percent, total_images_count):
 def stop(api: sly.Api, task_id, context, state, app_logger):
     remote_path = "/temp/{}/".format(task_id)
     api.file.remove(TEAM_ID, remote_path)
+    api.task.set_field(task_id, "data.finished", True)
 
 @my_app.callback("count_train_val_split")
 @sly.timeit
@@ -281,7 +282,6 @@ def main():
     # Run application service
     my_app.run(data=data, state=state, initial_events=initial_events)
 
-#@TODO: clean directory in files
 #@TODO: empty message never shows
 #@TODO: bulk upload to files to optimize preview
 #@TODO: customize icon and add positive/negative points
