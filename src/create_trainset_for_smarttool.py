@@ -76,7 +76,9 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
             api.task.set_fields(task_id, [{"field": "data.showEmptyMessage", "payload": True}])
             return
 
-        #TODO: clean folder in files
+        upload_src_paths = []
+        upload_dst_paths = []
+
         for idx, (cur_img, cur_ann) in enumerate(imgs_anns):
             img_name = "{:03d}.png".format(idx)
             remote_path = "/temp/{}/{}".format(task_id, img_name)
@@ -84,12 +86,28 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
                 api.file.remove(TEAM_ID, remote_path)
             local_path = "{}/{}".format(my_app.data_dir, img_name)
             sly.image.write(local_path, cur_img)
-            api.file.upload(TEAM_ID, local_path, remote_path)
-            sly.fs.silent_remove(local_path)
-            info = api.file.get_info_by_path(TEAM_ID, remote_path)
-            grid_data[img_name] = {"url": info.full_storage_url, "figures": [label.to_json() for label in cur_ann.labels]}
-            grid_layout[idx % CNT_GRID_COLUMNS].append(img_name)
-            api.task.set_fields(task_id, [{"field": "data.previewProgress", "payload": int((idx + 1) * 100.0 / len(imgs_anns))}])
+            #api.file.upload(TEAM_ID, local_path, remote_path)
+            upload_src_paths.append(local_path)
+            upload_dst_paths.append(remote_path)
+
+        # TODO: clean folder in files
+        api.file.remove(TEAM_ID, "/temp/{}/".format(task_id))
+        last_percent = 0
+        def _progress_callback(monitor):
+            cur_percent = int(monitor.bytes_read * 100.0 / monitor.len)
+            if cur_percent - last_percent > 10 or cur_percent == 100:
+                api.task.set_fields(task_id, [{"field": "data.previewProgress", "payload": cur_percent}])
+            last_percent = cur_percent
+        upload_results = api.file.upload_bulk(TEAM_ID, upload_src_paths, upload_dst_paths, _progress_callback)
+
+        for info in upload_results:
+            print(info)
+
+            #sly.fs.silent_remove(local_path)
+            #info = api.file.get_info_by_path(TEAM_ID, remote_path)
+            #grid_data[img_name] = {"url": info.full_storage_url, "figures": [label.to_json() for label in cur_ann.labels]}
+            #grid_layout[idx % CNT_GRID_COLUMNS].append(img_name)
+            #api.task.set_fields(task_id, [{"field": "data.previewProgress", "payload": int((idx + 1) * 100.0 / len(imgs_anns))}])
 
     _upload_augs()
 
@@ -286,6 +304,5 @@ def main():
 #@TODO: bulk upload to files to optimize preview
 #@TODO: customize icon and add positive/negative points
 #@TODO: create modal html
-
 if __name__ == "__main__":
     sly.main_wrapper("main", main)
