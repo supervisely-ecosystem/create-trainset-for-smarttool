@@ -53,7 +53,7 @@ def count_split(api: sly.Api, task_id, context, state, app_logger):
 @my_app.callback("preview")
 @sly.timeit
 def preview(api: sly.Api, task_id, context, state, app_logger):
-    global _last_percent
+    api.task.set_fields(task_id, [{"field": "data.previewProgress", "payload": 0}])
 
     image_id = random.choice(image_ids)
     image_info = api.image.get_info_by_id(image_id)
@@ -96,7 +96,7 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
             if hasattr(monitor, 'last_percent') is False:
                 monitor.last_percent = 0
             cur_percent = int(monitor.bytes_read * 100.0 / monitor.len)
-            if cur_percent - monitor.last_percent > 5 or cur_percent == 100:
+            if cur_percent - monitor.last_percent > 15 or cur_percent == 100:
                 api.task.set_fields(task_id, [{"field": "data.previewProgress", "payload": cur_percent}])
                 monitor.last_percent = cur_percent
 
