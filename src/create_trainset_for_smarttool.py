@@ -53,6 +53,8 @@ def count_split(api: sly.Api, task_id, context, state, app_logger):
 @my_app.callback("preview")
 @sly.timeit
 def preview(api: sly.Api, task_id, context, state, app_logger):
+    global _last_percent
+
     image_id = random.choice(image_ids)
     image_info = api.image.get_info_by_id(image_id)
     img_url = image_info.full_storage_url
@@ -78,7 +80,6 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
 
         upload_src_paths = []
         upload_dst_paths = []
-
         for idx, (cur_img, cur_ann) in enumerate(imgs_anns):
             img_name = "{:03d}.png".format(idx)
             remote_path = "/temp/{}/{}".format(task_id, img_name)
@@ -90,26 +91,27 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
             upload_src_paths.append(local_path)
             upload_dst_paths.append(remote_path)
 
-        # TODO: clean folder in files
         api.file.remove(TEAM_ID, "/temp/{}/".format(task_id))
-        last_percent = 0
         def _progress_callback(monitor):
+            if hasattr(monitor, 'last_percent') is False:
+                monitor.last_percent = 0
             cur_percent = int(monitor.bytes_read * 100.0 / monitor.len)
-            if cur_percent - last_percent > 10 or cur_percent == 100:
+            if cur_percent - monitor.last_percent > 5 or cur_percent == 100:
                 api.task.set_fields(task_id, [{"field": "data.previewProgress", "payload": cur_percent}])
-            last_percent = cur_percent
+                monitor.last_percent = cur_percent
+
         upload_results = api.file.upload_bulk(TEAM_ID, upload_src_paths, upload_dst_paths, _progress_callback)
+        #clean local data
+        for local_path in upload_src_paths:
+            sly.fs.silent_remove(local_path)
+        return upload_results
 
-        for info in upload_results:
-            print(info)
+    upload_results = _upload_augs()
 
-            #sly.fs.silent_remove(local_path)
-            #info = api.file.get_info_by_path(TEAM_ID, remote_path)
-            #grid_data[img_name] = {"url": info.full_storage_url, "figures": [label.to_json() for label in cur_ann.labels]}
-            #grid_layout[idx % CNT_GRID_COLUMNS].append(img_name)
-            #api.task.set_fields(task_id, [{"field": "data.previewProgress", "payload": int((idx + 1) * 100.0 / len(imgs_anns))}])
-
-    _upload_augs()
+    for idx, info in enumerate(upload_results):
+        grid_data[info.name] = {"url": info.full_storage_url,
+                                "figures": [label.to_json() for label in imgs_anns[idx][1].labels]}
+        grid_layout[idx % CNT_GRID_COLUMNS].append(info.name)
 
     if len(grid_data) > 0:
         content = {
