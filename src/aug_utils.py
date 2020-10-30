@@ -107,7 +107,7 @@ def aug_img_ann(img, ann: sly.Annotation, new_meta: sly.ProjectMeta, app_state):
 
     # filter objects by min side
     res_ann = res_ann.filter_labels_by_min_side(app_state["filterThresh"])
-    if len(ann.labels) == 0:
+    if len(res_ann.labels) == 0:
        return results
 
     inputs = []

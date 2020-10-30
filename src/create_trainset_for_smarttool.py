@@ -64,15 +64,15 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     ann_json = api.annotation.download(image_id).annotation
     ann = sly.Annotation.from_json(ann_json, project_meta)
 
-    #TODO: for debug
-    #ann.draw(img)
-    #cv2.imwrite("/workdir/ann.png", img)
-
     res_meta = aug_project_meta(project_meta, state)
     combined_meta = project_meta.merge(res_meta)
 
     imgs_anns = aug_img_ann(img, ann, res_meta, state)
     imgs_anns = [(img, ann)] + imgs_anns
+
+    # TODO: for debug
+    #ann.draw(img)
+    #cv2.imwrite("/workdir/ann.png", img)
 
     grid_data = {}
     grid_layout = [[] for i in range(CNT_GRID_COLUMNS)]
