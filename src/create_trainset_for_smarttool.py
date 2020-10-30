@@ -2,6 +2,7 @@ import os
 import random
 import supervisely_lib as sly
 from collections import defaultdict
+import cv2
 
 from aug_utils import validate_input_meta, aug_project_meta, aug_img_ann
 
@@ -62,6 +63,10 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     img = api.image.download_np(image_info.id)
     ann_json = api.annotation.download(image_id).annotation
     ann = sly.Annotation.from_json(ann_json, project_meta)
+
+    #TODO: for debug
+    #ann.draw(img)
+    #cv2.imwrite("/workdir/ann.png", img)
 
     res_meta = aug_project_meta(project_meta, state)
     combined_meta = project_meta.merge(res_meta)
