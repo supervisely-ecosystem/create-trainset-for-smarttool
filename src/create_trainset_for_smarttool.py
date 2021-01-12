@@ -242,10 +242,12 @@ def create_trainset(api: sly.Api, task_id, context, state, app_logger):
 
     my_app.stop()
 
+
 def _get_res_project_name(api, project):
     res_project_name = "{} (train SmartTool)".format(project.name)
     res_project_name = api.project.get_free_name(WORKSPACE_ID, res_project_name)
     return res_project_name
+
 
 def main():
     api = sly.Api.from_env()
