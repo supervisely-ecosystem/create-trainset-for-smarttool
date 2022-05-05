@@ -15,7 +15,10 @@
   "icon": "https://img.icons8.com/fluent/96/000000/fantasy.png",
   "icon_background": "#FFFFFF",
   "context_menu": {
-    "target": ["images_project"],
+    "target": [
+      "images_project"
+    ],
     "context_category": "Training data"
-  }
+  },
+  "poster": "https://i.imgur.com/8IwtO3h.png"
 }
