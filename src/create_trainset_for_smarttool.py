@@ -1,13 +1,13 @@
 import os
 import random
-import supervisely_lib as sly
+import supervisely as sly
 from collections import defaultdict
 import cv2
 
 from aug_utils import validate_input_meta, aug_project_meta, aug_img_ann
+from supervisely.app.v1.app_service import AppService
 
-
-my_app = sly.AppService()
+my_app = AppService()
 
 TEAM_ID = int(os.environ['context.teamId'])
 WORKSPACE_ID = int(os.environ['context.workspaceId'])
@@ -58,7 +58,7 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
 
     image_id = random.choice(image_ids)
     image_info = api.image.get_info_by_id(image_id)
-    img_url = image_info.full_storage_url
+    img_url = image_info.path_original
 
     img = api.image.download_np(image_info.id)
     ann_json = api.annotation.download(image_id).annotation
@@ -114,7 +114,7 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     upload_results = _upload_augs()
 
     for idx, info in enumerate(upload_results):
-        grid_data[info.name] = {"url": info.full_storage_url,
+        grid_data[info.name] = {"url": info.storage_path,
                                 "figures": [label.to_json() for label in imgs_anns[idx][1].labels]}
         grid_layout[idx % CNT_GRID_COLUMNS].append(info.name)
 
