@@ -114,7 +114,7 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
     upload_results = _upload_augs()
 
     for idx, info in enumerate(upload_results):
-        grid_data[info.name] = {"url": info.path_original,
+        grid_data[info.name] = {"url": info.storage_path,
                                 "figures": [label.to_json() for label in imgs_anns[idx][1].labels]}
         grid_layout[idx % CNT_GRID_COLUMNS].append(info.name)
 
