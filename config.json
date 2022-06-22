@@ -6,7 +6,8 @@
     "images",
     "interactive segmentation",
     "nn tools",
-    "augmentation"
+    "augmentation",
+    "data-operations"
   ],
   "description": "Prepare training data for SmartTool",
   "docker_image": "supervisely/base-py-sdk:6.23.1",
