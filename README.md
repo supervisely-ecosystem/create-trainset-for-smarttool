@@ -1,6 +1,6 @@
 <div align="center" markdown>
 
-<img src="https://i.imgur.com/8IwtO3h.png"/>
+<img src="https://user-images.githubusercontent.com/48245050/182337681-9c123361-3a18-4ceb-9d4e-be170479b4c3.png"/>
 
 # Create Trainset for SmartTool
 
