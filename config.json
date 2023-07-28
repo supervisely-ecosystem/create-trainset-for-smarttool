@@ -1,29 +1,29 @@
 {
-  "name": "Create Trainset for SmartTool",
-  "type": "app",
-  "categories": [
-    "neural network",
-    "images",
-    "interactive segmentation",
-    "nn tools",
-    "augmentation",
-    "data operations"
-  ],
-  "description": "Prepare training data for SmartTool",
-  "docker_image": "supervisely/base-py-sdk:6.72.55",
-  "instance_version": "6.4.57",
-  "main_script": "src/create_trainset_for_smarttool.py",
-  "modal_template": "src/modal.html",
-  "gui_template": "src/gui.html",
-  "task_location": "workspace_tasks",
-  "isolate": true,
-  "icon": "https://img.icons8.com/fluent/96/000000/fantasy.png",
-  "icon_background": "#FFFFFF",
-  "context_menu": {
-    "target": [
-      "images_project"
+    "name": "Create Trainset for SmartTool",
+    "type": "app",
+    "categories": [
+        "neural network",
+        "images",
+        "interactive segmentation",
+        "nn tools",
+        "augmentation",
+        "data operations"
     ],
-    "context_category": "Training data"
-  },
-  "poster": "https://user-images.githubusercontent.com/106374579/182811208-a9090964-3213-4f06-9b4f-d4b9deeb86fa.png"
+    "description": "Prepare training data for SmartTool",
+    "docker_image": "supervisely/data-operations:0.0.3",
+    "instance_version": "6.4.57",
+    "main_script": "src/create_trainset_for_smarttool.py",
+    "modal_template": "src/modal.html",
+    "gui_template": "src/gui.html",
+    "task_location": "workspace_tasks",
+    "isolate": true,
+    "icon": "https://img.icons8.com/fluent/96/000000/fantasy.png",
+    "icon_background": "#FFFFFF",
+    "context_menu": {
+        "target": [
+            "images_project"
+        ],
+        "context_category": "Training data"
+    },
+    "poster": "https://user-images.githubusercontent.com/106374579/182811208-a9090964-3213-4f06-9b4f-d4b9deeb86fa.png"
 }
