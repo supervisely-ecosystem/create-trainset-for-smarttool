@@ -10,7 +10,7 @@
         "data operations"
     ],
     "description": "Prepare training data for SmartTool",
-    "docker_image": "supervisely/data-operations:0.0.3",
+    "docker_image": "supervisely/data-operations:0.0.5",
     "instance_version": "6.4.57",
     "main_script": "src/create_trainset_for_smarttool.py",
     "modal_template": "src/modal.html",
