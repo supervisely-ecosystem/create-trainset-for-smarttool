@@ -18,6 +18,7 @@ total_images_count = None
 image_ids = []
 project_meta: sly.ProjectMeta = None
 new_project_meta = None
+preview_in_progress = False
 CNT_GRID_COLUMNS = 3
 
 image_grid_options = {
@@ -54,6 +55,9 @@ def count_split(api: sly.Api, task_id, context, state, app_logger):
 @my_app.callback("preview")
 @sly.timeit
 def preview(api: sly.Api, task_id, context, state, app_logger):
+    if preview_in_progress is True:
+        return
+    preview_in_progress = True
     api.task.set_fields(task_id, [{"field": "data.previewProgress", "payload": 0}])
 
     image_id = random.choice(image_ids)
@@ -125,6 +129,7 @@ def preview(api: sly.Api, task_id, context, state, app_logger):
             "layout": grid_layout
         }
         api.task.set_fields(task_id, [{"field": "data.preview.content", "payload": content}])
+    preview_in_progress = False
 
 def sample_images(api, datasets, state):
     split_table = _count_train_val_split(state["trainPercent"], total_images_count)
