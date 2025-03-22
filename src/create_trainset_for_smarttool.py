@@ -55,6 +55,7 @@ def count_split(api: sly.Api, task_id, context, state, app_logger):
 @my_app.callback("preview")
 @sly.timeit
 def preview(api: sly.Api, task_id, context, state, app_logger):
+    global preview_in_progress
     if preview_in_progress is True:
         return
     preview_in_progress = True
